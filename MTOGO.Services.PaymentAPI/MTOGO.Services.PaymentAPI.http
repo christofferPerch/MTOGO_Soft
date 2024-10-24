@@ -1,0 +1,6 @@
+@MTOGO.Services.PaymentAPI_HostAddress = http://localhost:5032
+
+GET {{MTOGO.Services.PaymentAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

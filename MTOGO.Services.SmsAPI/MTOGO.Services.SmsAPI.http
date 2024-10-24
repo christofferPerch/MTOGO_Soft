@@ -1,0 +1,6 @@
+@MTOGO.Services.SmsAPI_HostAddress = http://localhost:5050
+
+GET {{MTOGO.Services.SmsAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

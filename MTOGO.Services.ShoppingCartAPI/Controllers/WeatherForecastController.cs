@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace MTOGO.Services.CustomerAPI.Controllers
+namespace MTOGO.Services.ShoppingCartAPI.Controllers
 {
     [ApiController]
     [Route("[controller]")]

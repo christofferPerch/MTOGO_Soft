@@ -141,12 +141,12 @@ namespace MTOGO.Services.RestaurantAPI.Controllers
 
         #region Delete Methods
         [HttpDelete("deleteSpecificMenuItem")]
-        public async Task<IActionResult> RemoveMenuItem(int menuItemId)
+        public async Task<IActionResult> RemoveMenuItem(int restaurantId, int menuItemId)
         {
             _logger.LogInformation($"Received request to delete menu item with ID: {menuItemId}");
             try
             {
-                var result = await _restaurantService.RemoveMenuItem(menuItemId);
+                var result = await _restaurantService.RemoveMenuItem(restaurantId, menuItemId);
                 if (result == 0)
                 {
                     _response.IsSuccess = false;

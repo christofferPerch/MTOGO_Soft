@@ -1,10 +1,8 @@
 ﻿using Dapper;
 using MTOGO.Services.DataAccess;
-using MTOGO.Services.RestaurantAPI.Models;
 using MTOGO.Services.RestaurantAPI.Models.Dto;
 using MTOGO.Services.RestaurantAPI.Services.IServices;
 using System.Data;
-using Microsoft.Extensions.Logging;
 
 namespace MTOGO.Services.RestaurantAPI.Services
 {
@@ -73,9 +71,9 @@ namespace MTOGO.Services.RestaurantAPI.Services
             try
             {
                 var sql = @"
-                    INSERT INTO MenuItem (RestaurantId, Name, Description, Price)
-                    VALUES (@RestaurantId, @Name, @Description, @Price);
-                    SELECT CAST(SCOPE_IDENTITY() as int);";
+                        INSERT INTO MenuItem (RestaurantId, Name, Description, Price)
+                        VALUES (@RestaurantId, @Name, @Description, @Price);
+                        SELECT CAST(SCOPE_IDENTITY() as int);";
 
                 var parameters = new
                 {
@@ -100,34 +98,34 @@ namespace MTOGO.Services.RestaurantAPI.Services
             try
             {
                 var sql = @"
-                    UPDATE a
-                    SET a.Street = @Street, 
-                        a.City = @City, 
-                        a.State = @State, 
-                        a.PostalCode = @PostalCode, 
-                        a.Country = @Country
-                    FROM Address a
-                    INNER JOIN Restaurant r ON r.AddressId = a.Id
-                    WHERE r.Id = @RestaurantId;
+                        UPDATE a
+                        SET a.Street = @Street, 
+                            a.City = @City, 
+                            a.State = @State, 
+                            a.PostalCode = @PostalCode, 
+                            a.Country = @Country
+                        FROM Address a
+                        INNER JOIN Restaurant r ON r.AddressId = a.Id
+                        WHERE r.Id = @RestaurantId;
 
-                    UPDATE o
-                    SET o.OpeningTime = @OpeningTime, 
-                        o.ClosingTime = @ClosingTime
-                    FROM OperatingHours o
-                    INNER JOIN Restaurant r ON r.OperatingHoursId = o.Id
-                    WHERE r.Id = @RestaurantId;
+                        UPDATE o
+                        SET o.OpeningTime = @OpeningTime, 
+                            o.ClosingTime = @ClosingTime
+                        FROM OperatingHours o
+                        INNER JOIN Restaurant r ON r.OperatingHoursId = o.Id
+                        WHERE r.Id = @RestaurantId;
 
-                    UPDATE f
-                    SET f.MinimumOrderAmount = @MinimumOrderAmount, 
-                        f.MaximumOrderAmount = @MaximumOrderAmount, 
-                        f.FeePercentage = @FeePercentage
-                    FROM FeeStructure f
-                    WHERE f.RestaurantId = @RestaurantId;
+                        UPDATE f
+                        SET f.MinimumOrderAmount = @MinimumOrderAmount, 
+                            f.MaximumOrderAmount = @MaximumOrderAmount, 
+                            f.FeePercentage = @FeePercentage
+                        FROM FeeStructure f
+                        WHERE f.RestaurantId = @RestaurantId;
 
-                    UPDATE Restaurant
-                    SET Name = @Name, 
-                        ContactInformation = @ContactInformation
-                    WHERE Id = @RestaurantId;";
+                        UPDATE Restaurant
+                        SET Name = @Name, 
+                            ContactInformation = @ContactInformation
+                        WHERE Id = @RestaurantId;";
 
                 var parameters = new
                 {
@@ -160,9 +158,15 @@ namespace MTOGO.Services.RestaurantAPI.Services
             try
             {
                 var sql = @"
-                    DELETE FROM Restaurant WHERE Id = @Id;
-                    DELETE FROM Address WHERE Id = (SELECT AddressId FROM Restaurant WHERE Id = @Id);
-                    DELETE FROM OperatingHours WHERE Id = (SELECT OperatingHoursId FROM Restaurant WHERE Id = @Id);";
+                        DELETE FROM MenuItem WHERE RestaurantId = @Id;
+
+                        DELETE FROM FeeStructure WHERE RestaurantId = @Id;
+
+                        DELETE FROM Restaurant WHERE Id = @Id;
+
+                        DELETE FROM Address WHERE Id = (SELECT AddressId FROM Restaurant WHERE Id = @Id);
+
+                        DELETE FROM OperatingHours WHERE Id = (SELECT OperatingHoursId FROM Restaurant WHERE Id = @Id);";
 
                 return await _dataAccess.Delete(sql, new { Id = id });
             }
@@ -173,16 +177,16 @@ namespace MTOGO.Services.RestaurantAPI.Services
             }
         }
 
-        public async Task<int> RemoveMenuItem(int menuItemId)
+        public async Task<int> RemoveMenuItem(int restaurantId, int menuItemId)
         {
             try
             {
-                var sql = "DELETE FROM MenuItem WHERE Id = @Id";
-                return await _dataAccess.Delete(sql, new { Id = menuItemId });
+                var sql = "DELETE FROM MenuItem WHERE Id = @Id AND RestaurantId = @RestaurantId";
+                return await _dataAccess.Delete(sql, new { Id = menuItemId, RestaurantId = restaurantId });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error deleting menu item with ID {menuItemId}");
+                _logger.LogError(ex, $"Error deleting menu item with ID {menuItemId} for restaurant ID {restaurantId}");
                 throw;
             }
         }
@@ -192,11 +196,11 @@ namespace MTOGO.Services.RestaurantAPI.Services
             try
             {
                 var sql = @"
-                    SELECT r.*, a.*, o.*
-                    FROM Restaurant r
-                    INNER JOIN Address a ON r.AddressId = a.Id
-                    INNER JOIN OperatingHours o ON r.OperatingHoursId = o.Id
-                    WHERE r.Id = @Id;";
+                        SELECT r.*, a.*, o.*
+                        FROM Restaurant r
+                        INNER JOIN Address a ON r.AddressId = a.Id
+                        INNER JOIN OperatingHours o ON r.OperatingHoursId = o.Id
+                        WHERE r.Id = @Id;";
 
                 var restaurant = await _dataAccess.GetById<RestaurantDto>(sql, new { Id = id });
 
@@ -227,8 +231,8 @@ namespace MTOGO.Services.RestaurantAPI.Services
             try
             {
                 var sql = @"
-            SELECT r.Id, r.Name, r.ContactInformation, r.AddressId, r.OperatingHoursId
-            FROM Restaurant r";
+                        SELECT r.Id, r.Name, r.ContactInformation, r.AddressId, r.OperatingHoursId
+                        FROM Restaurant r";
 
 
                 var restaurants = await _dataAccess.GetAll<RestaurantDto>(sql);

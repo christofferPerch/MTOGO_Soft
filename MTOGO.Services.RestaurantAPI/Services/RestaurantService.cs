@@ -19,82 +19,6 @@ namespace MTOGO.Services.RestaurantAPI.Services
             _logger = logger;
         }
 
-        public async Task<RestaurantDto?> GetRestaurantById(int id)
-        {
-            try
-            {
-                var sql = @"
-                    SELECT r.*, a.*, o.*
-                    FROM Restaurant r
-                    INNER JOIN Address a ON r.AddressId = a.Id
-                    INNER JOIN OperatingHours o ON r.OperatingHoursId = o.Id
-                    WHERE r.Id = @Id;";
-
-                var restaurant = await _dataAccess.GetById<RestaurantDto>(sql, new { Id = id });
-
-                if (restaurant == null)
-                {
-                    return null;
-                }
-
-                var menuItemsSql = "SELECT * FROM MenuItem WHERE RestaurantId = @RestaurantId;";
-                var menuItems = await _dataAccess.GetAll<MenuItemDto>(menuItemsSql, new { RestaurantId = id });
-                restaurant.MenuItems = menuItems;
-
-                var feeStructuresSql = "SELECT * FROM FeeStructure WHERE RestaurantId = @RestaurantId;";
-                var feeStructures = await _dataAccess.GetAll<FeeStructureDto>(feeStructuresSql, new { RestaurantId = id });
-                restaurant.FeeStructures = feeStructures;
-
-                return restaurant;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error retrieving restaurant with ID {id}");
-                throw;
-            }
-        }
-
-        public async Task<List<RestaurantDto>> GetAllRestaurants()
-        {
-            try
-            {
-                var sql = @"
-            SELECT r.Id, r.Name, r.ContactInformation, r.AddressId, r.OperatingHoursId
-            FROM Restaurant r";
-
-
-                var restaurants = await _dataAccess.GetAll<RestaurantDto>(sql);
-
-                foreach (var restaurant in restaurants)
-                {
-                    var addressSql = "SELECT * FROM Address WHERE Id = @AddressId;";
-                    var address = await _dataAccess.GetById<AddressDto>(addressSql, new { AddressId = restaurant.AddressId });
-                    restaurant.Address = address;
-
-                    var operatingHoursSql = "SELECT * FROM OperatingHours WHERE Id = @OperatingHoursId;";
-                    var operatingHours = await _dataAccess.GetById<OperatingHoursDto>(operatingHoursSql, new { OperatingHoursId = restaurant.OperatingHoursId });
-                    restaurant.OperatingHours = operatingHours;
-
-                    var menuItemsSql = "SELECT * FROM MenuItem WHERE RestaurantId = @RestaurantId;";
-                    var menuItems = await _dataAccess.GetAll<MenuItemDto>(menuItemsSql, new { RestaurantId = restaurant.Id });
-                    restaurant.MenuItems = menuItems ?? new List<MenuItemDto>();
-
-                    var feeStructuresSql = "SELECT * FROM FeeStructure WHERE RestaurantId = @RestaurantId;";
-                    var feeStructures = await _dataAccess.GetAll<FeeStructureDto>(feeStructuresSql, new { RestaurantId = restaurant.Id });
-                    restaurant.FeeStructures = feeStructures;
-                }
-
-                return restaurants;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving all restaurants");
-                throw;
-            }
-        }
-
-
-
         public async Task<int> AddRestaurant(RestaurantDto restaurant)
         {
             try
@@ -140,6 +64,33 @@ namespace MTOGO.Services.RestaurantAPI.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error adding new restaurant");
+                throw;
+            }
+        }
+
+        public async Task<int> AddMenuItem(AddMenuItemDto menuItemDto)
+        {
+            try
+            {
+                var sql = @"
+                    INSERT INTO MenuItem (RestaurantId, Name, Description, Price)
+                    VALUES (@RestaurantId, @Name, @Description, @Price);
+                    SELECT CAST(SCOPE_IDENTITY() as int);";
+
+                var parameters = new
+                {
+                    RestaurantId = menuItemDto.RestaurantId,
+                    Name = menuItemDto.Name,
+                    Description = menuItemDto.Description,
+                    Price = menuItemDto.Price
+                };
+
+                int newMenuItemId = (await _dataAccess.InsertAndGetId<int?>(sql, parameters)) ?? 0;
+                return newMenuItemId;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding new menu item");
                 throw;
             }
         }
@@ -222,33 +173,6 @@ namespace MTOGO.Services.RestaurantAPI.Services
             }
         }
 
-        public async Task<int> AddMenuItem(AddMenuItemDto menuItemDto)
-        {
-            try
-            {
-                var sql = @"
-                    INSERT INTO MenuItem (RestaurantId, Name, Description, Price)
-                    VALUES (@RestaurantId, @Name, @Description, @Price);
-                    SELECT CAST(SCOPE_IDENTITY() as int);";
-
-                var parameters = new
-                {
-                    RestaurantId = menuItemDto.RestaurantId,
-                    Name = menuItemDto.Name,
-                    Description = menuItemDto.Description,
-                    Price = menuItemDto.Price
-                };
-
-                int newMenuItemId = (await _dataAccess.InsertAndGetId<int?>(sql, parameters)) ?? 0;
-                return newMenuItemId;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error adding new menu item");
-                throw;
-            }
-        }
-
         public async Task<int> RemoveMenuItem(int menuItemId)
         {
             try
@@ -259,6 +183,80 @@ namespace MTOGO.Services.RestaurantAPI.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error deleting menu item with ID {menuItemId}");
+                throw;
+            }
+        }
+
+        public async Task<RestaurantDto?> GetRestaurantById(int id)
+        {
+            try
+            {
+                var sql = @"
+                    SELECT r.*, a.*, o.*
+                    FROM Restaurant r
+                    INNER JOIN Address a ON r.AddressId = a.Id
+                    INNER JOIN OperatingHours o ON r.OperatingHoursId = o.Id
+                    WHERE r.Id = @Id;";
+
+                var restaurant = await _dataAccess.GetById<RestaurantDto>(sql, new { Id = id });
+
+                if (restaurant == null)
+                {
+                    return null;
+                }
+
+                var menuItemsSql = "SELECT * FROM MenuItem WHERE RestaurantId = @RestaurantId;";
+                var menuItems = await _dataAccess.GetAll<MenuItemDto>(menuItemsSql, new { RestaurantId = id });
+                restaurant.MenuItems = menuItems;
+
+                var feeStructuresSql = "SELECT * FROM FeeStructure WHERE RestaurantId = @RestaurantId;";
+                var feeStructures = await _dataAccess.GetAll<FeeStructureDto>(feeStructuresSql, new { RestaurantId = id });
+                restaurant.FeeStructures = feeStructures;
+
+                return restaurant;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error retrieving restaurant with ID {id}");
+                throw;
+            }
+        }
+
+        public async Task<List<RestaurantDto>> GetAllRestaurants()
+        {
+            try
+            {
+                var sql = @"
+            SELECT r.Id, r.Name, r.ContactInformation, r.AddressId, r.OperatingHoursId
+            FROM Restaurant r";
+
+
+                var restaurants = await _dataAccess.GetAll<RestaurantDto>(sql);
+
+                foreach (var restaurant in restaurants)
+                {
+                    var addressSql = "SELECT * FROM Address WHERE Id = @AddressId;";
+                    var address = await _dataAccess.GetById<AddressDto>(addressSql, new { AddressId = restaurant.AddressId });
+                    restaurant.Address = address;
+
+                    var operatingHoursSql = "SELECT * FROM OperatingHours WHERE Id = @OperatingHoursId;";
+                    var operatingHours = await _dataAccess.GetById<OperatingHoursDto>(operatingHoursSql, new { OperatingHoursId = restaurant.OperatingHoursId });
+                    restaurant.OperatingHours = operatingHours;
+
+                    var menuItemsSql = "SELECT * FROM MenuItem WHERE RestaurantId = @RestaurantId;";
+                    var menuItems = await _dataAccess.GetAll<MenuItemDto>(menuItemsSql, new { RestaurantId = restaurant.Id });
+                    restaurant.MenuItems = menuItems ?? new List<MenuItemDto>();
+
+                    var feeStructuresSql = "SELECT * FROM FeeStructure WHERE RestaurantId = @RestaurantId;";
+                    var feeStructures = await _dataAccess.GetAll<FeeStructureDto>(feeStructuresSql, new { RestaurantId = restaurant.Id });
+                    restaurant.FeeStructures = feeStructures;
+                }
+
+                return restaurants;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving all restaurants");
                 throw;
             }
         }

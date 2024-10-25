@@ -1,4 +1,4 @@
-namespace MTOGO.Services.CustomerAPI
+namespace MTOGO.Services.ShoppingCartAPI
 {
     public class WeatherForecast
     {

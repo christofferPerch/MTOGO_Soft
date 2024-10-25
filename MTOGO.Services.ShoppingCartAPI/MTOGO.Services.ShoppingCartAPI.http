@@ -1,0 +1,6 @@
+@MTOGO.Services.ShoppingCartAPI_HostAddress = http://localhost:5118
+
+GET {{MTOGO.Services.ShoppingCartAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

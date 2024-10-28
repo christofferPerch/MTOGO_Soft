@@ -45,13 +45,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MTOGO.Services.ShoppingCart
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MTOGO.GatewaySolution", "MTOGO.GatewaySolution\MTOGO.GatewaySolution.csproj", "{2A3AC5E4-2CFD-4FBE-93CC-C134D9CA92AE}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{DCB60C53-35D8-4727-AB66-B8A202590069}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Database_Diagrams", "Database_Diagrams", "{088793DC-8DE9-4F95-90A9-C2D0D0F2671A}"
-	ProjectSection(SolutionItems) = preProject
-		..\..\..\Pictures\Restaurant.png = ..\..\..\Pictures\Restaurant.png
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -133,7 +126,6 @@ Global
 		{586AE036-BAB1-4D13-9ACC-665B22C88004} = {1F77EB96-E457-40EC-A310-8C5B128AE0D9}
 		{391D1B21-1F50-45A1-A65A-B0D472AEC250} = {1F77EB96-E457-40EC-A310-8C5B128AE0D9}
 		{2A3AC5E4-2CFD-4FBE-93CC-C134D9CA92AE} = {0908E26F-163B-49B4-978D-F4A9D41FC005}
-		{088793DC-8DE9-4F95-90A9-C2D0D0F2671A} = {DCB60C53-35D8-4727-AB66-B8A202590069}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {86DA12C8-D3F4-49DF-ADC8-AB32F3B5125D}

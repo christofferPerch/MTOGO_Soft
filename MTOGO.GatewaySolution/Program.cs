@@ -1,20 +1,20 @@
 using MMLib.SwaggerForOcelot.DependencyInjection;
+using MTOGO.GatewaySolution.Extensions;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddAppAuthetication();
 
-// Load Ocelot configuration
 string ocelotConfigFile = builder.Environment.IsProduction() ? "ocelot.Production.json" : "ocelot.json";
 builder.Configuration.AddJsonFile(ocelotConfigFile, optional: false, reloadOnChange: true);
 
-// Register Ocelot and Swagger for Ocelot services
+
 builder.Services.AddOcelot(builder.Configuration);
 builder.Services.AddSwaggerForOcelot(builder.Configuration);
 
 var app = builder.Build();
 
-// Configure Swagger for Ocelot
 app.UseSwaggerForOcelotUI(opt =>
 {
     opt.PathToSwaggerGenerator = "/swagger/docs";
@@ -31,7 +31,7 @@ app.Use(async (context, next) =>
         await next();
     }
 });
-// Configure Ocelot middleware pipeline
+
 await app.UseOcelot();
 
 app.Run();

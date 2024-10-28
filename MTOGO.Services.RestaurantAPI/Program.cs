@@ -1,21 +1,20 @@
 using MTOGO.Services.DataAccess;
-using MTOGO.Services.RestaurantAPI.Services.IServices;
 using MTOGO.Services.RestaurantAPI.Services;
+using MTOGO.Services.RestaurantAPI.Services.IServices;
 using MTOGO.MessageBus;
-
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-builder.Services.AddScoped<IDataAccess, DataAccess>(sp =>
-    new DataAccess(connectionString));
-
+// Register services
+builder.Services.AddScoped<IDataAccess, DataAccess>(sp => new DataAccess(connectionString));
 builder.Services.AddScoped<IRestaurantService, RestaurantService>();
 builder.Services.AddScoped<IMessageBus, MessageBus>();
 
-builder.Services.AddDistributedMemoryCache();  
-
+// Add caching and session
+builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(15);
@@ -23,47 +22,41 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+// Configure CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAllOrigins",
-        builder =>
-        {
-            builder.AllowAnyOrigin()
-                   .AllowAnyMethod()
-                   .AllowAnyHeader();
-        });
+    options.AddPolicy("AllowAllOrigins", builder =>
+    {
+        builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+    });
 });
 
+// Add controllers and Swagger
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Restaurant API", Version = "v1" });
+});
 
 var app = builder.Build();
 
+// Use middleware
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
-}
-else
-{
-    app.UseExceptionHandler("/Error");
-    app.UseHsts();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Restaurant API");
+    });
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-
 app.UseCors("AllowAllOrigins");
-
 app.UseSession();
-
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
-
-
 app.Run();

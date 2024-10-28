@@ -7,13 +7,13 @@ using Newtonsoft.Json;
 namespace MTOGO.Services.ShoppingCartAPI.Controllers
 {
     [ApiController]
-    [Route("api/cart")]
-    public class ShoppingCartController : ControllerBase
+    [Route("api/shoppingcart")]
+    public class ShoppingCartAPIController : ControllerBase
     {
         private readonly IShoppingCartService _cartService;
         private readonly IMessageBus _messageBus;
 
-        public ShoppingCartController(IShoppingCartService cartService, IMessageBus messageBus)
+        public ShoppingCartAPIController(IShoppingCartService cartService, IMessageBus messageBus)
         {
             _cartService = cartService;
             _messageBus = messageBus;

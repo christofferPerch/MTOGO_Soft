@@ -1,7 +1,7 @@
 {
   "Routes": [
     {
-      "DownstreamPathTemplate": "/api/restaurant/add",
+      "DownstreamPathTemplate": "/api/restaurant/{everything}",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -9,87 +9,67 @@
           "Port": 7004
         }
       ],
-      "UpstreamPathTemplate": "/restaurant/add",
-      "UpstreamHttpMethod": [ "POST" ],
-      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+      "UpstreamPathTemplate": "/restaurant/{everything}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "SwaggerKey": "restaurant"
     },
     {
-      "DownstreamPathTemplate": "/api/restaurant/addMenuItem",
+      "DownstreamPathTemplate": "/api/shoppingcart/{everything}",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 7004
+          "Port": 7137
         }
       ],
-      "UpstreamPathTemplate": "/restaurant/addmenuitem",
-      "UpstreamHttpMethod": [ "POST" ],
-      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+      "UpstreamPathTemplate": "/shoppingcart/{everything}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "SwaggerKey": "shoppingcart"
     },
     {
-      "DownstreamPathTemplate": "/api/restaurant/updateRestaurant",
+      "DownstreamPathTemplate": "/api/auth/{everything}",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 7004
+          "Port": 7003
         }
       ],
-      "UpstreamPathTemplate": "/restaurant/updaterestaurant",
-      "UpstreamHttpMethod": [ "PUT" ],
-      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+      "UpstreamPathTemplate": "/auth/{everything}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "SwaggerKey": "auth"
+    }
+  ],
+  "SwaggerEndPoints": [
+    {
+      "Key": "restaurant",
+      "Config": [
+        {
+          "Name": "Restaurant API",
+          "Version": "v1",
+          "Url": "https://localhost:7004/swagger/v1/swagger.json"
+        }
+      ]
     },
     {
-      "DownstreamPathTemplate": "/api/restaurant/deleteSpecificMenuItem",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
+      "Key": "shoppingcart",
+      "Config": [
         {
-          "Host": "localhost",
-          "Port": 7004
+          "Name": "Shopping Cart API",
+          "Version": "v1",
+          "Url": "https://localhost:7137/swagger/v1/swagger.json"
         }
-      ],
-      "UpstreamPathTemplate": "/restaurant/deletemenuitem",
-      "UpstreamHttpMethod": [ "DELETE" ],
-      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+      ]
     },
     {
-      "DownstreamPathTemplate": "/api/restaurant/deleteSpecificRestaurant",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
+      "Key": "auth",
+      "Config": [
         {
-          "Host": "localhost",
-          "Port": 7004
+          "Name": "Auth API",
+          "Version": "v1",
+          "Url": "https://localhost:7003/swagger/v1/swagger.json"
         }
-      ],
-      "UpstreamPathTemplate": "/restaurant/deleterestaurant",
-      "UpstreamHttpMethod": [ "DELETE" ],
-      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
-    },
-    {
-      "DownstreamPathTemplate": "/api/restaurant/getSpecificRestaurant",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7004
-        }
-      ],
-      "UpstreamPathTemplate": "/restaurant/{id}",
-      "UpstreamHttpMethod": [ "GET" ],
-      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
-    },
-    {
-      "DownstreamPathTemplate": "/api/restaurant/allRestaurants",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7004
-        }
-      ],
-      "UpstreamPathTemplate": "/restaurant/all",
-      "UpstreamHttpMethod": [ "GET" ],
-      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
+      ]
     }
   ],
   "GlobalConfiguration": {

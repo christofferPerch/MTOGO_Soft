@@ -43,6 +43,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MTOGO.Services.DataAccess",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MTOGO.Services.ShoppingCartAPI", "MTOGO.Services.ShoppingCartAPI\MTOGO.Services.ShoppingCartAPI.csproj", "{391D1B21-1F50-45A1-A65A-B0D472AEC250}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MTOGO.GatewaySolution", "MTOGO.GatewaySolution\MTOGO.GatewaySolution.csproj", "{2A3AC5E4-2CFD-4FBE-93CC-C134D9CA92AE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -101,6 +103,10 @@ Global
 		{391D1B21-1F50-45A1-A65A-B0D472AEC250}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{391D1B21-1F50-45A1-A65A-B0D472AEC250}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{391D1B21-1F50-45A1-A65A-B0D472AEC250}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A3AC5E4-2CFD-4FBE-93CC-C134D9CA92AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A3AC5E4-2CFD-4FBE-93CC-C134D9CA92AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A3AC5E4-2CFD-4FBE-93CC-C134D9CA92AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A3AC5E4-2CFD-4FBE-93CC-C134D9CA92AE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -119,6 +125,7 @@ Global
 		{D731F66F-11DC-4862-932C-A7D3FA9EAF92} = {0ECFCDE4-7D20-42A3-98B2-749347222E93}
 		{586AE036-BAB1-4D13-9ACC-665B22C88004} = {1F77EB96-E457-40EC-A310-8C5B128AE0D9}
 		{391D1B21-1F50-45A1-A65A-B0D472AEC250} = {1F77EB96-E457-40EC-A310-8C5B128AE0D9}
+		{2A3AC5E4-2CFD-4FBE-93CC-C134D9CA92AE} = {0908E26F-163B-49B4-978D-F4A9D41FC005}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {86DA12C8-D3F4-49DF-ADC8-AB32F3B5125D}

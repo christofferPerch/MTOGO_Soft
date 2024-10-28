@@ -5,7 +5,7 @@ namespace MTOGO.Services.RestaurantAPI.Services.IServices
 {
     public interface IRestaurantService
     {
-        Task<int> AddRestaurant(RestaurantDto restaurant);
+        Task<int> AddRestaurant(AddRestaurantDto restaurant);
         Task<int> AddMenuItem(AddMenuItemDto menuItemDto);
         Task<int> UpdateRestaurant(UpdateRestaurantDto updateRestaurantDto);
         Task<int> RemoveMenuItem(int restaurantId, int menuItemId);

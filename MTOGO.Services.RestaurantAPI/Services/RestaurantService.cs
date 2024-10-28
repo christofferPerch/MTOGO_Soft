@@ -17,43 +17,43 @@ namespace MTOGO.Services.RestaurantAPI.Services
             _logger = logger;
         }
 
-        public async Task<int> AddRestaurant(RestaurantDto restaurant)
+        public async Task<int> AddRestaurant(AddRestaurantDto restaurantDto)
         {
             try
             {
-                var menuItemsTable = new DataTable();
-                menuItemsTable.Columns.Add("Name", typeof(string));
-                menuItemsTable.Columns.Add("Description", typeof(string));
-                menuItemsTable.Columns.Add("Price", typeof(decimal));
-
-                foreach (var item in restaurant.MenuItems)
-                {
-                    menuItemsTable.Rows.Add(item.Name, item.Description, item.Price);
-                }
-
-                var feeStructuresTable = new DataTable();
-                feeStructuresTable.Columns.Add("MinimumOrderAmount", typeof(decimal));
-                feeStructuresTable.Columns.Add("MaximumOrderAmount", typeof(decimal));
-                feeStructuresTable.Columns.Add("FeePercentage", typeof(decimal));
-
-                foreach (var fee in restaurant.FeeStructures)
-                {
-                    feeStructuresTable.Rows.Add(fee.MinimumOrderAmount, fee.MaximumOrderAmount, fee.FeePercentage);
-                }
-
+                #region parameters
                 var parameters = new DynamicParameters();
-                parameters.Add("@Name", restaurant.Name);
-                parameters.Add("@Street", restaurant.Address.Street);
-                parameters.Add("@City", restaurant.Address.City);
-                parameters.Add("@State", restaurant.Address.State);
-                parameters.Add("@PostalCode", restaurant.Address.PostalCode);
-                parameters.Add("@Country", restaurant.Address.Country);
-                parameters.Add("@ContactInformation", restaurant.ContactInformation);
-                parameters.Add("@OpeningTime", restaurant.OperatingHours.OpeningTime);
-                parameters.Add("@ClosingTime", restaurant.OperatingHours.ClosingTime);
-                parameters.Add("@MenuItems", menuItemsTable.AsTableValuedParameter("TVP_MenuItem"));
-                parameters.Add("@FeeStructures", feeStructuresTable.AsTableValuedParameter("TVP_FeeStructure"));
+                parameters.Add("@RestaurantName", restaurantDto.RestaurantName);
+                parameters.Add("@LegalName", restaurantDto.LegalName);
+                parameters.Add("@VATNumber", restaurantDto.VATNumber);
+                parameters.Add("@RestaurantDescription", restaurantDto.RestaurantDescription);
+                parameters.Add("@FoodCategory", (int)restaurantDto.FoodCategory);
+                parameters.Add("@ContactEmail", restaurantDto.ContactEmail);
+                parameters.Add("@ContactPhone", restaurantDto.ContactPhone);
+
+                parameters.Add("@AddressLine1", restaurantDto.Address.AddressLine1);
+                parameters.Add("@AddressLine2", restaurantDto.Address.AddressLine2);
+                parameters.Add("@City", restaurantDto.Address.City);
+                parameters.Add("@ZipCode", restaurantDto.Address.ZipCode);
+                parameters.Add("@Country", restaurantDto.Address.Country);
+
+                parameters.Add("@MondayOpening", restaurantDto.OperatingHours.MondayOpening);
+                parameters.Add("@MondayClosing", restaurantDto.OperatingHours.MondayClosing);
+                parameters.Add("@TuesdayOpening", restaurantDto.OperatingHours.TuesdayOpening);
+                parameters.Add("@TuesdayClosing", restaurantDto.OperatingHours.TuesdayClosing);
+                parameters.Add("@WednesdayOpening", restaurantDto.OperatingHours.WednesdayOpening);
+                parameters.Add("@WednesdayClosing", restaurantDto.OperatingHours.WednesdayClosing);
+                parameters.Add("@ThursdayOpening", restaurantDto.OperatingHours.ThursdayOpening);
+                parameters.Add("@ThursdayClosing", restaurantDto.OperatingHours.ThursdayClosing);
+                parameters.Add("@FridayOpening", restaurantDto.OperatingHours.FridayOpening);
+                parameters.Add("@FridayClosing", restaurantDto.OperatingHours.FridayClosing);
+                parameters.Add("@SaturdayOpening", restaurantDto.OperatingHours.SaturdayOpening);
+                parameters.Add("@SaturdayClosing", restaurantDto.OperatingHours.SaturdayClosing);
+                parameters.Add("@SundayOpening", restaurantDto.OperatingHours.SundayOpening);
+                parameters.Add("@SundayClosing", restaurantDto.OperatingHours.SundayClosing);
+
                 parameters.Add("@RestaurantId", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                #endregion
 
                 await _dataAccess.ExecuteStoredProcedure<int>("AddRestaurant", parameters);
 
@@ -71,16 +71,17 @@ namespace MTOGO.Services.RestaurantAPI.Services
             try
             {
                 var sql = @"
-                        INSERT INTO MenuItem (RestaurantId, Name, Description, Price)
-                        VALUES (@RestaurantId, @Name, @Description, @Price);
-                        SELECT CAST(SCOPE_IDENTITY() as int);";
+                    INSERT INTO MenuItem (RestaurantId, Name, Description, Price, Image)
+                    VALUES (@RestaurantId, @Name, @Description, @Price, @Image);
+                    SELECT CAST(SCOPE_IDENTITY() as int);";
 
                 var parameters = new
                 {
                     RestaurantId = menuItemDto.RestaurantId,
                     Name = menuItemDto.Name,
                     Description = menuItemDto.Description,
-                    Price = menuItemDto.Price
+                    Price = menuItemDto.Price,
+                    Image = menuItemDto.Image
                 };
 
                 int newMenuItemId = (await _dataAccess.InsertAndGetId<int?>(sql, parameters)) ?? 0;
@@ -97,54 +98,48 @@ namespace MTOGO.Services.RestaurantAPI.Services
         {
             try
             {
-                var sql = @"
-                        UPDATE a
-                        SET a.Street = @Street, 
-                            a.City = @City, 
-                            a.State = @State, 
-                            a.PostalCode = @PostalCode, 
-                            a.Country = @Country
-                        FROM Address a
-                        INNER JOIN Restaurant r ON r.AddressId = a.Id
-                        WHERE r.Id = @RestaurantId;
+                #region parameters
+                var parameters = new DynamicParameters();
+                parameters.Add("@RestaurantId", updateRestaurantDto.Id);
+                parameters.Add("@RestaurantName", updateRestaurantDto.RestaurantName);
+                parameters.Add("@LegalName", updateRestaurantDto.LegalName);
+                parameters.Add("@VATNumber", updateRestaurantDto.VATNumber);
+                parameters.Add("@RestaurantDescription", updateRestaurantDto.RestaurantDescription);
+                parameters.Add("@FoodCategory", updateRestaurantDto.FoodCategory.HasValue ? (int)updateRestaurantDto.FoodCategory : (object)DBNull.Value);
+                parameters.Add("@ContactEmail", updateRestaurantDto.ContactEmail);
+                parameters.Add("@ContactPhone", updateRestaurantDto.ContactPhone);
 
-                        UPDATE o
-                        SET o.OpeningTime = @OpeningTime, 
-                            o.ClosingTime = @ClosingTime
-                        FROM OperatingHours o
-                        INNER JOIN Restaurant r ON r.OperatingHoursId = o.Id
-                        WHERE r.Id = @RestaurantId;
-
-                        UPDATE f
-                        SET f.MinimumOrderAmount = @MinimumOrderAmount, 
-                            f.MaximumOrderAmount = @MaximumOrderAmount, 
-                            f.FeePercentage = @FeePercentage
-                        FROM FeeStructure f
-                        WHERE f.RestaurantId = @RestaurantId;
-
-                        UPDATE Restaurant
-                        SET Name = @Name, 
-                            ContactInformation = @ContactInformation
-                        WHERE Id = @RestaurantId;";
-
-                var parameters = new
+                if (updateRestaurantDto.Address != null)
                 {
-                    RestaurantId = updateRestaurantDto.Id,
-                    updateRestaurantDto.Address.Street,
-                    updateRestaurantDto.Address.City,
-                    updateRestaurantDto.Address.State,
-                    updateRestaurantDto.Address.PostalCode,
-                    updateRestaurantDto.Address.Country,
-                    updateRestaurantDto.OperatingHours.OpeningTime,
-                    updateRestaurantDto.OperatingHours.ClosingTime,
-                    updateRestaurantDto.FeeStructure.MinimumOrderAmount,
-                    updateRestaurantDto.FeeStructure.MaximumOrderAmount,
-                    updateRestaurantDto.FeeStructure.FeePercentage,
-                    updateRestaurantDto.Name,
-                    updateRestaurantDto.ContactInformation
-                };
+                    parameters.Add("@AddressLine1", updateRestaurantDto.Address.AddressLine1);
+                    parameters.Add("@AddressLine2", updateRestaurantDto.Address.AddressLine2);
+                    parameters.Add("@City", updateRestaurantDto.Address.City);
+                    parameters.Add("@ZipCode", updateRestaurantDto.Address.ZipCode);
+                    parameters.Add("@Country", updateRestaurantDto.Address.Country);
+                }
 
-                return await _dataAccess.Update(sql, parameters);
+                if (updateRestaurantDto.OperatingHours != null)
+                {
+                    parameters.Add("@MondayOpening", updateRestaurantDto.OperatingHours.MondayOpening);
+                    parameters.Add("@MondayClosing", updateRestaurantDto.OperatingHours.MondayClosing);
+                    parameters.Add("@TuesdayOpening", updateRestaurantDto.OperatingHours.TuesdayOpening);
+                    parameters.Add("@TuesdayClosing", updateRestaurantDto.OperatingHours.TuesdayClosing);
+                    parameters.Add("@WednesdayOpening", updateRestaurantDto.OperatingHours.WednesdayOpening);
+                    parameters.Add("@WednesdayClosing", updateRestaurantDto.OperatingHours.WednesdayClosing);
+                    parameters.Add("@ThursdayOpening", updateRestaurantDto.OperatingHours.ThursdayOpening);
+                    parameters.Add("@ThursdayClosing", updateRestaurantDto.OperatingHours.ThursdayClosing);
+                    parameters.Add("@FridayOpening", updateRestaurantDto.OperatingHours.FridayOpening);
+                    parameters.Add("@FridayClosing", updateRestaurantDto.OperatingHours.FridayClosing);
+                    parameters.Add("@SaturdayOpening", updateRestaurantDto.OperatingHours.SaturdayOpening);
+                    parameters.Add("@SaturdayClosing", updateRestaurantDto.OperatingHours.SaturdayClosing);
+                    parameters.Add("@SundayOpening", updateRestaurantDto.OperatingHours.SundayOpening);
+                    parameters.Add("@SundayClosing", updateRestaurantDto.OperatingHours.SundayClosing);
+                }
+                #endregion
+
+                var result = await _dataAccess.ExecuteStoredProcedure<int>("UpdateRestaurant", parameters);
+
+                return result;
             }
             catch (Exception ex)
             {
@@ -159,8 +154,6 @@ namespace MTOGO.Services.RestaurantAPI.Services
             {
                 var sql = @"
                         DELETE FROM MenuItem WHERE RestaurantId = @Id;
-
-                        DELETE FROM FeeStructure WHERE RestaurantId = @Id;
 
                         DELETE FROM Restaurant WHERE Id = @Id;
 
@@ -196,13 +189,10 @@ namespace MTOGO.Services.RestaurantAPI.Services
             try
             {
                 var sql = @"
-                        SELECT r.*, a.*, o.*
-                        FROM Restaurant r
-                        INNER JOIN Address a ON r.AddressId = a.Id
-                        INNER JOIN OperatingHours o ON r.OperatingHoursId = o.Id
-                        WHERE r.Id = @Id;";
+                        SELECT * FROM Restaurant 
+                        WHERE Id = @Id";  
 
-                var restaurant = await _dataAccess.GetById<RestaurantDto>(sql, new { Id = id });
+                RestaurantDto restaurant = await _dataAccess.GetById<RestaurantDto>(sql, new { Id = id });
 
                 if (restaurant == null)
                 {
@@ -213,9 +203,13 @@ namespace MTOGO.Services.RestaurantAPI.Services
                 var menuItems = await _dataAccess.GetAll<MenuItemDto>(menuItemsSql, new { RestaurantId = id });
                 restaurant.MenuItems = menuItems;
 
-                var feeStructuresSql = "SELECT * FROM FeeStructure WHERE RestaurantId = @RestaurantId;";
-                var feeStructures = await _dataAccess.GetAll<FeeStructureDto>(feeStructuresSql, new { RestaurantId = id });
-                restaurant.FeeStructures = feeStructures;
+                var addressSql = "SELECT * FROM Address WHERE Id = @AddressId;";
+                var address = await _dataAccess.GetById<AddressDto>(addressSql, new { AddressId = restaurant.AddressId });
+                restaurant.Address = address;
+
+                var operatingHoursSql = "SELECT * FROM OperatingHours WHERE Id = @OperatingHoursId;";
+                var operatingHours = await _dataAccess.GetById<OperatingHoursDto>(operatingHoursSql, new { OperatingHoursId = restaurant.OperatingHoursId });
+                restaurant.OperatingHours = operatingHours;
 
                 return restaurant;
             }
@@ -230,10 +224,7 @@ namespace MTOGO.Services.RestaurantAPI.Services
         {
             try
             {
-                var sql = @"
-                        SELECT r.Id, r.Name, r.ContactInformation, r.AddressId, r.OperatingHoursId
-                        FROM Restaurant r";
-
+                var sql = @"SELECT * FROM Restaurant";
 
                 var restaurants = await _dataAccess.GetAll<RestaurantDto>(sql);
 
@@ -250,10 +241,6 @@ namespace MTOGO.Services.RestaurantAPI.Services
                     var menuItemsSql = "SELECT * FROM MenuItem WHERE RestaurantId = @RestaurantId;";
                     var menuItems = await _dataAccess.GetAll<MenuItemDto>(menuItemsSql, new { RestaurantId = restaurant.Id });
                     restaurant.MenuItems = menuItems ?? new List<MenuItemDto>();
-
-                    var feeStructuresSql = "SELECT * FROM FeeStructure WHERE RestaurantId = @RestaurantId;";
-                    var feeStructures = await _dataAccess.GetAll<FeeStructureDto>(feeStructuresSql, new { RestaurantId = restaurant.Id });
-                    restaurant.FeeStructures = feeStructures;
                 }
 
                 return restaurants;

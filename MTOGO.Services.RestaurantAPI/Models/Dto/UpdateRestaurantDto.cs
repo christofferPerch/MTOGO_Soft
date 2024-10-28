@@ -3,10 +3,14 @@
     public class UpdateRestaurantDto
     {
         public int Id { get; set; }
-        public string Name { get; set; }
-        public string ContactInformation { get; set; }
-        public AddressDto Address { get; set; }
-        public OperatingHoursDto OperatingHours { get; set; }
-        public FeeStructureDto FeeStructure { get; set; }
+        public string? RestaurantName { get; set; }
+        public string? LegalName { get; set; }
+        public string? VATNumber { get; set; }
+        public string? RestaurantDescription { get; set; }
+        public string? ContactEmail { get; set; }
+        public string? ContactPhone { get; set; }
+        public FoodCategory? FoodCategory { get; set; }
+        public AddressDto? Address { get; set; }
+        public OperatingHoursDto? OperatingHours { get; set; }
     }
 }

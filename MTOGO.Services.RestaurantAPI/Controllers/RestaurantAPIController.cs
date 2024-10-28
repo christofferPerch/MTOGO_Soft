@@ -30,7 +30,7 @@ namespace MTOGO.Services.RestaurantAPI.Controllers
 
         #region Post Methods
         [HttpPost("add")]
-        public async Task<IActionResult> AddRestaurant([FromBody] RestaurantDto restaurant)
+        public async Task<IActionResult> AddRestaurant([FromBody] AddRestaurantDto restaurant)
         {
             _logger.LogInformation("Received request to add a new restaurant.");
 
@@ -47,7 +47,7 @@ namespace MTOGO.Services.RestaurantAPI.Controllers
                 _response.Result = restaurantId;
                 _response.Message = "Restaurant added successfully.";
 
-                var message = $"New restaurant added: {restaurant.Name} with ID: {restaurantId}";
+                var message = $"New restaurant added: {restaurant.RestaurantName} with ID: {restaurantId}";
                 await _messageBus.PublishMessage(_configuration.GetValue<string>("TopicAndQueueNames:RestaurantAddedQueue"), message);
 
                 return Ok(_response);
@@ -115,7 +115,7 @@ namespace MTOGO.Services.RestaurantAPI.Controllers
                 }
 
                 var result = await _restaurantService.UpdateRestaurant(updateRestaurantDto);
-                if (result == 0)
+                if (result == 1)
                 {
                     _response.IsSuccess = false;
                     _response.Message = "Restaurant not found.";
@@ -124,7 +124,7 @@ namespace MTOGO.Services.RestaurantAPI.Controllers
 
                 _response.Message = "Restaurant updated successfully.";
 
-                var message = $"Restaurant updated: {updateRestaurantDto.Name} with ID: {updateRestaurantDto.Id}";
+                var message = $"Restaurant updated: {updateRestaurantDto.RestaurantName} with ID: {updateRestaurantDto.Id}";
                 await _messageBus.PublishMessage(_configuration.GetValue<string>("TopicAndQueueNames:RestaurantUpdatedQueue"), message);
 
                 return Ok(_response);

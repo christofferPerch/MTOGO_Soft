@@ -1,20 +1,17 @@
 {
   "Routes": [
-    // RestaurantAPI Routes
     {
       "DownstreamPathTemplate": "/api/restaurant/add",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 7000
+          "Port": 7004
         }
       ],
       "UpstreamPathTemplate": "/restaurant/add",
       "UpstreamHttpMethod": [ "POST" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      }
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
     },
     {
       "DownstreamPathTemplate": "/api/restaurant/addMenuItem",
@@ -22,14 +19,12 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 7000
+          "Port": 7004
         }
       ],
       "UpstreamPathTemplate": "/restaurant/addmenuitem",
       "UpstreamHttpMethod": [ "POST" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      }
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
     },
     {
       "DownstreamPathTemplate": "/api/restaurant/updateRestaurant",
@@ -37,14 +32,12 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 7000
+          "Port": 7004
         }
       ],
       "UpstreamPathTemplate": "/restaurant/updaterestaurant",
       "UpstreamHttpMethod": [ "PUT" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      }
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
     },
     {
       "DownstreamPathTemplate": "/api/restaurant/deleteSpecificMenuItem",
@@ -52,14 +45,12 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 7000
+          "Port": 7004
         }
       ],
       "UpstreamPathTemplate": "/restaurant/deletemenuitem",
       "UpstreamHttpMethod": [ "DELETE" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      }
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
     },
     {
       "DownstreamPathTemplate": "/api/restaurant/deleteSpecificRestaurant",
@@ -67,14 +58,12 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 7000
+          "Port": 7004
         }
       ],
       "UpstreamPathTemplate": "/restaurant/deleterestaurant",
       "UpstreamHttpMethod": [ "DELETE" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      }
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
     },
     {
       "DownstreamPathTemplate": "/api/restaurant/getSpecificRestaurant",
@@ -82,14 +71,12 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 7000
+          "Port": 7004
         }
       ],
       "UpstreamPathTemplate": "/restaurant/{id}",
       "UpstreamHttpMethod": [ "GET" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      }
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
     },
     {
       "DownstreamPathTemplate": "/api/restaurant/allRestaurants",
@@ -97,14 +84,12 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 7000
+          "Port": 7004
         }
       ],
       "UpstreamPathTemplate": "/restaurant/all",
       "UpstreamHttpMethod": [ "GET" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      }
+      "AuthenticationOptions": { "AuthenticationProviderKey": "Bearer" }
     }
   ],
   "GlobalConfiguration": {

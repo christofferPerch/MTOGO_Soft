@@ -45,5 +45,8 @@ namespace MTOGO.Services.DataAccess
         public Task<T?> ExecuteStoredProcedure<T>(string procedureName, object parameters) =>
           WithConnection(db => db.QueryFirstOrDefaultAsync<T>(
               procedureName, parameters, commandType: CommandType.StoredProcedure));
+
+        public Task<T> ExecuteScalarAsync<T>(string sql, object? parameters = null) =>
+            WithConnection(db => db.ExecuteScalarAsync<T>(sql, parameters));
     }
 }

@@ -40,7 +40,7 @@ namespace MTOGO.Services.OrderAPI.Controllers
                 _response.Result = orderId;
                 _response.Message = "Order created successfully.";
 
-                await _messageBus.PublishMessage("OrderCreatedQueue", $"Order {orderId} created for user {order.UserId}");
+                await _messageBus.PublishMessage("TopicAndQueueNames:OrderCreatedQueue", $"Order {orderId} created for user {order.UserId}");
                 return Ok(_response);
             }
             catch (Exception ex)

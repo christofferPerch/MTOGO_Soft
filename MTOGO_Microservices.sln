@@ -43,7 +43,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MTOGO.Services.DataAccess",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MTOGO.Services.ShoppingCartAPI", "MTOGO.Services.ShoppingCartAPI\MTOGO.Services.ShoppingCartAPI.csproj", "{391D1B21-1F50-45A1-A65A-B0D472AEC250}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MTOGO.GatewaySolution", "MTOGO.GatewaySolution\MTOGO.GatewaySolution.csproj", "{2A3AC5E4-2CFD-4FBE-93CC-C134D9CA92AE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MTOGO.GatewaySolution", "MTOGO.GatewaySolution\MTOGO.GatewaySolution.csproj", "{2A3AC5E4-2CFD-4FBE-93CC-C134D9CA92AE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

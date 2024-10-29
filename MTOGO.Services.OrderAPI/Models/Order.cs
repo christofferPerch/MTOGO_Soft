@@ -9,7 +9,14 @@
         public decimal TotalAmount { get; set; }
         public decimal VATAmount { get; set; }
         public DateTime OrderPlacedTimestamp { get; set; }
-        public int OrderStatusId { get; set; }
         public List<OrderItem> Items { get; set; } = new List<OrderItem>();
+    }
+
+    public enum OrderStatus
+    {
+        Undefined = 0,
+        FreeToTake = 1,
+        DeliveryInProgress = 2,
+        Delivered = 3
     }
 }

@@ -8,7 +8,6 @@
         public decimal TotalAmount { get; set; }
         public decimal VATAmount { get; set; }
         public DateTime OrderPlacedTimestamp { get; set; }
-        public int OrderStatusId { get; set; }
         public List<OrderItemDto> Items { get; set; } = new();
     }
 }

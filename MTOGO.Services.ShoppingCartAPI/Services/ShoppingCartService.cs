@@ -15,8 +15,13 @@ namespace MTOGO.Services.ShoppingCartAPI.Services
         private readonly ILogger<ShoppingCartService> _logger;
         private readonly IConfiguration _configuration;
 
+        private readonly string _cartCreatedQueue;
+        private readonly string _cartUpdatedQueue;
+        private readonly string _cartRemovedQueue;
+        private readonly string _cartRequestQueue;
+        private readonly string _cartResponseQueue;
 
-        public ShoppingCartService(IDistributedCache redisCache, IMessageBus messageBus, 
+        public ShoppingCartService(IDistributedCache redisCache, IMessageBus messageBus,
             ILogger<ShoppingCartService> logger, IConfiguration configuration)
         {
             _redisCache = redisCache;
@@ -24,6 +29,29 @@ namespace MTOGO.Services.ShoppingCartAPI.Services
             _logger = logger;
             _configuration = configuration;
 
+            _cartCreatedQueue = _configuration.GetValue<string>("TopicAndQueueNames:CartCreatedQueue");
+            _cartUpdatedQueue = _configuration.GetValue<string>("TopicAndQueueNames:CartUpdatedQueue");
+            _cartRemovedQueue = _configuration.GetValue<string>("TopicAndQueueNames:CartRemovedQueue");
+            _cartRequestQueue = _configuration.GetValue<string>("TopicAndQueueNames:CartRequestQueue");
+            _cartResponseQueue = _configuration.GetValue<string>("TopicAndQueueNames:CartResponseQueue");
+
+            if (string.IsNullOrEmpty(_cartCreatedQueue) || string.IsNullOrEmpty(_cartUpdatedQueue) ||
+                string.IsNullOrEmpty(_cartRemovedQueue) || string.IsNullOrEmpty(_cartRequestQueue) ||
+                string.IsNullOrEmpty(_cartResponseQueue))
+            {
+                throw new Exception("One or more queue names are not configured properly in appsettings.json.");
+            }
+
+            SubscribeToCartRequestQueue();
+        }
+
+        private void SubscribeToCartRequestQueue()
+        {
+            _messageBus.SubscribeMessage<CartRequestMessageDto>(_cartRequestQueue, async (cartRequest) =>
+            {
+                _logger.LogInformation($"Received cart request message for user {cartRequest.UserId} with CorrelationId: {cartRequest.CorrelationId}");
+                await ProcessCartRequest(cartRequest);
+            });
         }
 
         public async Task<Cart?> GetCartAsync(string userId)
@@ -32,15 +60,36 @@ namespace MTOGO.Services.ShoppingCartAPI.Services
             return string.IsNullOrEmpty(cartData) ? null : JsonConvert.DeserializeObject<Cart>(cartData);
         }
 
+        public async Task<Cart> CreateCartAsync(Cart cart)
+        {
+            var existingCart = await GetCartAsync(cart.UserId);
+            if (existingCart != null)
+            {
+                throw new InvalidOperationException($"Cart already exists for user {cart.UserId}");
+            }
+
+            await _redisCache.SetStringAsync(cart.UserId, JsonConvert.SerializeObject(cart));
+            await _messageBus.PublishMessage(_cartCreatedQueue, JsonConvert.SerializeObject(cart));
+
+            _logger.LogInformation($"Created new cart for user {cart.UserId}");
+            return cart;
+        }
+
         public async Task<Cart> UpdateCartAsync(Cart cart)
         {
             await _redisCache.SetStringAsync(cart.UserId, JsonConvert.SerializeObject(cart));
+            await _messageBus.PublishMessage(_cartUpdatedQueue, JsonConvert.SerializeObject(cart));
+
+            _logger.LogInformation($"Updated cart for user {cart.UserId}");
             return await GetCartAsync(cart.UserId);
         }
 
         public async Task<bool> RemoveCartAsync(string userId)
         {
             await _redisCache.RemoveAsync(userId);
+            await _messageBus.PublishMessage(_cartRemovedQueue, $"Cart for user {userId} removed");
+
+            _logger.LogInformation($"Removed cart for user {userId}");
             return true;
         }
 
@@ -65,9 +114,10 @@ namespace MTOGO.Services.ShoppingCartAPI.Services
                 }).ToList()
             };
 
-            _logger.LogInformation($"Publishing cart response with CorrelationId: {cartResponse.CorrelationId} to {_configuration["TopicAndQueueNames:CartResponseQueue"]}");
-            await _messageBus.PublishMessage(_configuration["TopicAndQueueNames:CartResponseQueue"], JsonConvert.SerializeObject(cartResponse));
+            _logger.LogInformation($"Publishing cart response with CorrelationId: {cartResponse.CorrelationId} to CartResponseQueue");
+            await _messageBus.PublishMessage("CartResponseQueue", JsonConvert.SerializeObject(cartResponse));
         }
+
 
     }
 }

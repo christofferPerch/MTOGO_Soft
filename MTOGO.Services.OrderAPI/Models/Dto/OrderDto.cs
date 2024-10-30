@@ -2,12 +2,11 @@
 {
     public class OrderDto
     {
-        public string UserId { get; set; }
+        public string UserId { get; set; }             
         public int RestaurantId { get; set; }
-        public int DeliveryAgentId { get; set; }
+        public int? DeliveryAgentId { get; set; }
         public decimal TotalAmount { get; set; }
         public decimal VATAmount { get; set; }
-        public DateTime OrderPlacedTimestamp { get; set; }
-        public List<OrderItemDto> Items { get; set; } = new();
+        public List<OrderItemDto> Items { get; set; }
     }
 }

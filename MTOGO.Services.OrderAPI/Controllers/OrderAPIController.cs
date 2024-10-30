@@ -26,7 +26,6 @@ namespace MTOGO.Services.OrderAPI.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> CreateOrder([FromBody] OrderDto order)
         {
-            _logger.LogInformation("Received request to create a new order.");
             try
             {
                 if (order == null)
@@ -55,7 +54,6 @@ namespace MTOGO.Services.OrderAPI.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetOrderById(int id)
         {
-            _logger.LogInformation($"Received request to retrieve order with ID: {id}");
             try
             {
                 var order = await _orderService.GetOrderByIdAsync(id);
@@ -82,7 +80,6 @@ namespace MTOGO.Services.OrderAPI.Controllers
         [HttpPut("updateStatus/{orderId}")]
         public async Task<IActionResult> UpdateOrderStatus(int orderId, [FromBody] int statusId)
         {
-            _logger.LogInformation($"Received request to update status for order ID: {orderId}");
             try
             {
                 var success = await _orderService.UpdateOrderStatusAsync(orderId, statusId);
@@ -108,7 +105,6 @@ namespace MTOGO.Services.OrderAPI.Controllers
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteOrder(int id)
         {
-            _logger.LogInformation($"Received request to delete order with ID: {id}");
             try
             {
                 var result = await _orderService.DeleteOrderAsync(id);

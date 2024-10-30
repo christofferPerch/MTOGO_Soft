@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using Microsoft.Data.SqlClient;
 using MTOGO.MessageBus;
 using MTOGO.Services.DataAccess;
 using MTOGO.Services.OrderAPI.Models;
@@ -23,8 +22,14 @@ namespace MTOGO.Services.OrderAPI.Services
             _dataAccess = dataAccess;
             _logger = logger;
             _messageBus = messageBus;
-            _cartRequestQueue = configuration["TopicAndQueueNames:CartRequestQueue"];
-            _cartResponseQueue = configuration["TopicAndQueueNames:CartResponseQueue"];
+
+            _cartRequestQueue = configuration.GetValue<string>("TopicAndQueueNames:CartRequestQueue");
+            _cartResponseQueue = configuration.GetValue<string>("TopicAndQueueNames:CartResponseQueue");
+
+            if (string.IsNullOrEmpty(_cartRequestQueue) || string.IsNullOrEmpty(_cartResponseQueue))
+            {
+                throw new Exception("Queue names are not configured properly in appsettings.json.");
+            }
         }
 
         public async Task<int> CreateOrderAsync(OrderDto order)
@@ -38,13 +43,10 @@ namespace MTOGO.Services.OrderAPI.Services
                     CorrelationId = correlationId
                 };
 
-                // Publish the cart request to the queue
                 await _messageBus.PublishMessage(_cartRequestQueue, JsonConvert.SerializeObject(cartRequest));
 
-                // Wait for the cart response
                 var cartResponse = await WaitForCartResponseAsync(correlationId);
 
-                // Populate order with cart data
                 order.Items = cartResponse.Items;
                 order.TotalAmount = cartResponse.Items.Sum(item => item.Price * item.Quantity);
                 order.VATAmount = order.TotalAmount * 0.2m;
@@ -61,11 +63,9 @@ namespace MTOGO.Services.OrderAPI.Services
         private async Task<CartResponseMessage> WaitForCartResponseAsync(Guid correlationId)
         {
             var tcs = new TaskCompletionSource<CartResponseMessage>();
-            _logger.LogInformation($"Subscribing to {_cartResponseQueue} with CorrelationId: {correlationId}");
 
-            _messageBus.SubscribeMessage<CartResponseMessage>(_cartResponseQueue, message =>
+            _messageBus.SubscribeMessage<CartResponseMessage>("CartResponseQueue", message =>
             {
-                _logger.LogInformation($"Received message with CorrelationId: {message.CorrelationId}");
                 if (message.CorrelationId == correlationId)
                 {
                     _logger.LogInformation("CorrelationId matched. Setting result in TaskCompletionSource.");
@@ -84,8 +84,6 @@ namespace MTOGO.Services.OrderAPI.Services
             }
         }
 
-
-
         private async Task<int> SaveOrderAsync(OrderDto order)
         {
             try
@@ -97,7 +95,11 @@ namespace MTOGO.Services.OrderAPI.Services
 
                 foreach (var item in order.Items)
                 {
-                    orderItemsTable.Rows.Add(item.MenuItemId, item.Price, item.Quantity);
+                    orderItemsTable.Rows.Add(
+                        item.MenuItemId,
+                        item.Price,
+                        item.Quantity
+                    );
                 }
 
                 var parameters = new DynamicParameters();
@@ -106,7 +108,7 @@ namespace MTOGO.Services.OrderAPI.Services
                 parameters.Add("@DeliveryAgentId", order.DeliveryAgentId);
                 parameters.Add("@TotalAmount", order.TotalAmount);
                 parameters.Add("@VATAmount", order.VATAmount);
-                parameters.Add("@OrderPlacedTimestamp", DateTime.UtcNow); // Auto-set timestamp
+                parameters.Add("@OrderPlacedTimestamp", DateTime.UtcNow);
                 parameters.Add("@OrderStatusId", (int)OrderStatus.FreeToTake);
                 parameters.Add("@OrderItems", orderItemsTable.AsTableValuedParameter("TVP_OrderItem"));
                 parameters.Add("@OrderId", dbType: DbType.Int32, direction: ParameterDirection.Output);

@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MTOGO.MessageBus;
 using MTOGO.Services.ShoppingCartAPI.Models;
+using MTOGO.Services.ShoppingCartAPI.Models.Dto;
 using MTOGO.Services.ShoppingCartAPI.Services.IServices;
 using Newtonsoft.Json;
+using System;
 
 namespace MTOGO.Services.ShoppingCartAPI.Controllers
 {
@@ -26,11 +28,24 @@ namespace MTOGO.Services.ShoppingCartAPI.Controllers
             return cart == null ? NotFound() : Ok(cart);
         }
 
-        [HttpPost]
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateCart([FromBody] Cart cart)
+        {
+            try
+            {
+                var createdCart = await _cartService.CreateCartAsync(cart);
+                return CreatedAtAction(nameof(GetCart), new { userId = createdCart.UserId }, createdCart);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { Message = ex.Message });
+            }
+        }
+
+        [HttpPut]
         public async Task<IActionResult> UpdateCart([FromBody] Cart cart)
         {
             var updatedCart = await _cartService.UpdateCartAsync(cart);
-            await _messageBus.PublishMessage("CartUpdatedQueue", JsonConvert.SerializeObject(cart));
             return Ok(updatedCart);
         }
 
@@ -38,8 +53,15 @@ namespace MTOGO.Services.ShoppingCartAPI.Controllers
         public async Task<IActionResult> RemoveCart(string userId)
         {
             await _cartService.RemoveCartAsync(userId);
-            await _messageBus.PublishMessage("CartRemovedQueue", $"Cart for user {userId} removed");
             return NoContent();
+        }
+
+        [HttpPost("request-cart-items")]
+        public async Task<IActionResult> RequestCartItems([FromBody] CartRequestMessageDto request)
+        {
+            request.CorrelationId = Guid.NewGuid();
+            await _messageBus.PublishMessage("TopicAndQueueNames:CartRequestQueue", JsonConvert.SerializeObject(request));
+            return Accepted(new { CorrelationId = request.CorrelationId });
         }
     }
 }

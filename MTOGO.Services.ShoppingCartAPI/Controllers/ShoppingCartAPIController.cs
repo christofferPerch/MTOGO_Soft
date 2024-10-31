@@ -24,7 +24,7 @@ namespace MTOGO.Services.ShoppingCartAPI.Controllers
         [HttpGet("{userId}")]
         public async Task<IActionResult> GetCart(string userId)
         {
-            var cart = await _cartService.GetCartAsync(userId);
+            var cart = await _cartService.GetCart(userId);
             return cart == null ? NotFound() : Ok(cart);
         }
 
@@ -33,7 +33,7 @@ namespace MTOGO.Services.ShoppingCartAPI.Controllers
         {
             try
             {
-                var createdCart = await _cartService.CreateCartAsync(cart);
+                var createdCart = await _cartService.CreateCart(cart);
                 return CreatedAtAction(nameof(GetCart), new { userId = createdCart.UserId }, createdCart);
             }
             catch (InvalidOperationException ex)
@@ -45,14 +45,14 @@ namespace MTOGO.Services.ShoppingCartAPI.Controllers
         [HttpPut]
         public async Task<IActionResult> UpdateCart([FromBody] Cart cart)
         {
-            var updatedCart = await _cartService.UpdateCartAsync(cart);
+            var updatedCart = await _cartService.UpdateCart(cart);
             return Ok(updatedCart);
         }
 
         [HttpDelete("{userId}")]
         public async Task<IActionResult> RemoveCart(string userId)
         {
-            await _cartService.RemoveCartAsync(userId);
+            await _cartService.RemoveCart(userId);
             return NoContent();
         }
 

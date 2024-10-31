@@ -32,7 +32,7 @@ namespace MTOGO.Services.OrderAPI.Services
             }
         }
 
-        public async Task<int> CreateOrderAsync(OrderDto order)
+        public async Task<int> CreateOrder(OrderDto order)
         {
             try
             {
@@ -45,13 +45,13 @@ namespace MTOGO.Services.OrderAPI.Services
 
                 await _messageBus.PublishMessage(_cartRequestQueue, JsonConvert.SerializeObject(cartRequest));
 
-                var cartResponse = await WaitForCartResponseAsync(correlationId);
+                var cartResponse = await WaitForCartResponse(correlationId);
 
                 order.Items = cartResponse.Items;
                 order.TotalAmount = cartResponse.Items.Sum(item => item.Price * item.Quantity);
                 order.VATAmount = order.TotalAmount * 0.2m;
 
-                return await SaveOrderAsync(order);
+                return await SaveOrder(order);
             }
             catch (Exception ex)
             {
@@ -60,7 +60,7 @@ namespace MTOGO.Services.OrderAPI.Services
             }
         }
 
-        private async Task<CartResponseMessage> WaitForCartResponseAsync(Guid correlationId)
+        private async Task<CartResponseMessage> WaitForCartResponse(Guid correlationId)
         {
             var tcs = new TaskCompletionSource<CartResponseMessage>();
 
@@ -84,7 +84,7 @@ namespace MTOGO.Services.OrderAPI.Services
             }
         }
 
-        private async Task<int> SaveOrderAsync(OrderDto order)
+        private async Task<int> SaveOrder(OrderDto order)
         {
             try
             {
@@ -124,7 +124,7 @@ namespace MTOGO.Services.OrderAPI.Services
             }
         }
 
-        public async Task<OrderDto?> GetOrderByIdAsync(int id)
+        public async Task<OrderDto?> GetOrderById(int id)
         {
             try
             {
@@ -149,7 +149,7 @@ namespace MTOGO.Services.OrderAPI.Services
             }
         }
 
-        public async Task<int> UpdateOrderStatusAsync(int orderId, int statusId)
+        public async Task<int> UpdateOrderStatus(int orderId, int statusId)
         {
             try
             {
@@ -159,22 +159,6 @@ namespace MTOGO.Services.OrderAPI.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error updating order status for ID {orderId}");
-                throw;
-            }
-        }
-
-        public async Task<int> DeleteOrderAsync(int id)
-        {
-            try
-            {
-                var sql = @"
-                    DELETE FROM OrderItem WHERE OrderId = @OrderId;
-                    DELETE FROM [Order] WHERE Id = @OrderId;";
-                return await _dataAccess.Delete(sql, new { OrderId = id });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error deleting order with ID {id}");
                 throw;
             }
         }

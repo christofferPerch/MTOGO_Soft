@@ -27,7 +27,6 @@ namespace MTOGO.Services.RestaurantAPI.Services
                 parameters.Add("@LegalName", restaurantDto.LegalName);
                 parameters.Add("@VATNumber", restaurantDto.VATNumber);
                 parameters.Add("@RestaurantDescription", restaurantDto.RestaurantDescription);
-                parameters.Add("@FoodCategory", (int)restaurantDto.FoodCategory);
                 parameters.Add("@ContactEmail", restaurantDto.ContactEmail);
                 parameters.Add("@ContactPhone", restaurantDto.ContactPhone);
 
@@ -37,26 +36,28 @@ namespace MTOGO.Services.RestaurantAPI.Services
                 parameters.Add("@ZipCode", restaurantDto.Address.ZipCode);
                 parameters.Add("@Country", restaurantDto.Address.Country);
 
-                parameters.Add("@MondayOpening", restaurantDto.OperatingHours.MondayOpening);
-                parameters.Add("@MondayClosing", restaurantDto.OperatingHours.MondayClosing);
-                parameters.Add("@TuesdayOpening", restaurantDto.OperatingHours.TuesdayOpening);
-                parameters.Add("@TuesdayClosing", restaurantDto.OperatingHours.TuesdayClosing);
-                parameters.Add("@WednesdayOpening", restaurantDto.OperatingHours.WednesdayOpening);
-                parameters.Add("@WednesdayClosing", restaurantDto.OperatingHours.WednesdayClosing);
-                parameters.Add("@ThursdayOpening", restaurantDto.OperatingHours.ThursdayOpening);
-                parameters.Add("@ThursdayClosing", restaurantDto.OperatingHours.ThursdayClosing);
-                parameters.Add("@FridayOpening", restaurantDto.OperatingHours.FridayOpening);
-                parameters.Add("@FridayClosing", restaurantDto.OperatingHours.FridayClosing);
-                parameters.Add("@SaturdayOpening", restaurantDto.OperatingHours.SaturdayOpening);
-                parameters.Add("@SaturdayClosing", restaurantDto.OperatingHours.SaturdayClosing);
-                parameters.Add("@SundayOpening", restaurantDto.OperatingHours.SundayOpening);
-                parameters.Add("@SundayClosing", restaurantDto.OperatingHours.SundayClosing);
+                var operatingHoursTable = new DataTable();
+                operatingHoursTable.Columns.Add("Day", typeof(int));
+                operatingHoursTable.Columns.Add("OpeningHours", typeof(TimeSpan));
+                operatingHoursTable.Columns.Add("ClosingHours", typeof(TimeSpan));
+                foreach (var hours in restaurantDto.OperatingHours)
+                {
+                    operatingHoursTable.Rows.Add((int)hours.Day, hours.OpeningHours, hours.ClosingHours);
+                }
+                parameters.Add("@OperatingHours", operatingHoursTable.AsTableValuedParameter("TVP_OperatingHours"));
+
+                var foodCategoriesTable = new DataTable();
+                foodCategoriesTable.Columns.Add("Category", typeof(int));
+                foreach (var category in restaurantDto.FoodCategories)
+                {
+                    foodCategoriesTable.Rows.Add((int)category.Category);
+                }
+                parameters.Add("@FoodCategories", foodCategoriesTable.AsTableValuedParameter("TVP_FoodCategory"));
 
                 parameters.Add("@RestaurantId", dbType: DbType.Int32, direction: ParameterDirection.Output);
                 #endregion
 
                 await _dataAccess.ExecuteStoredProcedure<int>("AddRestaurant", parameters);
-
                 return parameters.Get<int>("@RestaurantId");
             }
             catch (Exception ex)
@@ -105,7 +106,6 @@ namespace MTOGO.Services.RestaurantAPI.Services
                 parameters.Add("@LegalName", updateRestaurantDto.LegalName);
                 parameters.Add("@VATNumber", updateRestaurantDto.VATNumber);
                 parameters.Add("@RestaurantDescription", updateRestaurantDto.RestaurantDescription);
-                parameters.Add("@FoodCategory", updateRestaurantDto.FoodCategory.HasValue ? (int)updateRestaurantDto.FoodCategory : (object)DBNull.Value);
                 parameters.Add("@ContactEmail", updateRestaurantDto.ContactEmail);
                 parameters.Add("@ContactPhone", updateRestaurantDto.ContactPhone);
 
@@ -120,26 +120,30 @@ namespace MTOGO.Services.RestaurantAPI.Services
 
                 if (updateRestaurantDto.OperatingHours != null)
                 {
-                    parameters.Add("@MondayOpening", updateRestaurantDto.OperatingHours.MondayOpening);
-                    parameters.Add("@MondayClosing", updateRestaurantDto.OperatingHours.MondayClosing);
-                    parameters.Add("@TuesdayOpening", updateRestaurantDto.OperatingHours.TuesdayOpening);
-                    parameters.Add("@TuesdayClosing", updateRestaurantDto.OperatingHours.TuesdayClosing);
-                    parameters.Add("@WednesdayOpening", updateRestaurantDto.OperatingHours.WednesdayOpening);
-                    parameters.Add("@WednesdayClosing", updateRestaurantDto.OperatingHours.WednesdayClosing);
-                    parameters.Add("@ThursdayOpening", updateRestaurantDto.OperatingHours.ThursdayOpening);
-                    parameters.Add("@ThursdayClosing", updateRestaurantDto.OperatingHours.ThursdayClosing);
-                    parameters.Add("@FridayOpening", updateRestaurantDto.OperatingHours.FridayOpening);
-                    parameters.Add("@FridayClosing", updateRestaurantDto.OperatingHours.FridayClosing);
-                    parameters.Add("@SaturdayOpening", updateRestaurantDto.OperatingHours.SaturdayOpening);
-                    parameters.Add("@SaturdayClosing", updateRestaurantDto.OperatingHours.SaturdayClosing);
-                    parameters.Add("@SundayOpening", updateRestaurantDto.OperatingHours.SundayOpening);
-                    parameters.Add("@SundayClosing", updateRestaurantDto.OperatingHours.SundayClosing);
+                    var operatingHoursTable = new DataTable();
+                    operatingHoursTable.Columns.Add("Day", typeof(int));
+                    operatingHoursTable.Columns.Add("OpeningHours", typeof(TimeSpan));
+                    operatingHoursTable.Columns.Add("ClosingHours", typeof(TimeSpan));
+                    foreach (var hours in updateRestaurantDto.OperatingHours)
+                    {
+                        operatingHoursTable.Rows.Add((int)hours.Day, hours.OpeningHours, hours.ClosingHours);
+                    }
+                    parameters.Add("@OperatingHours", operatingHoursTable.AsTableValuedParameter("TVP_OperatingHours"));
+                }
+
+                if (updateRestaurantDto.FoodCategories != null)
+                {
+                    var foodCategoriesTable = new DataTable();
+                    foodCategoriesTable.Columns.Add("Category", typeof(int));
+                    foreach (var category in updateRestaurantDto.FoodCategories)
+                    {
+                        foodCategoriesTable.Rows.Add((int)category.Category);
+                    }
+                    parameters.Add("@FoodCategories", foodCategoriesTable.AsTableValuedParameter("TVP_FoodCategory"));
                 }
                 #endregion
 
-                var result = await _dataAccess.ExecuteStoredProcedure<int>("UpdateRestaurant", parameters);
-
-                return result;
+                return await _dataAccess.ExecuteStoredProcedure<int>("UpdateRestaurant", parameters);
             }
             catch (Exception ex)
             {
@@ -155,11 +159,17 @@ namespace MTOGO.Services.RestaurantAPI.Services
                 var sql = @"
                         DELETE FROM MenuItem WHERE RestaurantId = @Id;
 
+                        DELETE FROM OperatingHours WHERE RestaurantId = @Id;
+
+                        DELETE FROM FoodCategory WHERE RestaurantId = @Id;
+            
                         DELETE FROM Restaurant WHERE Id = @Id;
 
-                        DELETE FROM Address WHERE Id = (SELECT AddressId FROM Restaurant WHERE Id = @Id);
+                        DELETE FROM Address 
 
-                        DELETE FROM OperatingHours WHERE Id = (SELECT OperatingHoursId FROM Restaurant WHERE Id = @Id);";
+                        WHERE Id = (
+                            SELECT AddressId FROM Restaurant WHERE Id = @Id
+                        );";
 
                 return await _dataAccess.Delete(sql, new { Id = id });
             }
@@ -169,6 +179,7 @@ namespace MTOGO.Services.RestaurantAPI.Services
                 throw;
             }
         }
+
 
         public async Task<int> RemoveMenuItem(int restaurantId, int menuItemId)
         {
@@ -188,28 +199,21 @@ namespace MTOGO.Services.RestaurantAPI.Services
         {
             try
             {
-                var sql = @"
-                        SELECT * FROM Restaurant 
-                        WHERE Id = @Id";  
+                var sql = "SELECT * FROM Restaurant WHERE Id = @Id";
+                var restaurant = await _dataAccess.GetById<RestaurantDto>(sql, new { Id = id });
+                if (restaurant == null) return null;
 
-                RestaurantDto restaurant = await _dataAccess.GetById<RestaurantDto>(sql, new { Id = id });
+                var menuItemsSql = "SELECT * FROM MenuItem WHERE RestaurantId = @RestaurantId";
+                restaurant.MenuItems = await _dataAccess.GetAll<MenuItemDto>(menuItemsSql, new { RestaurantId = id }) ?? new List<MenuItemDto>();
 
-                if (restaurant == null)
-                {
-                    return null;
-                }
+                var addressSql = "SELECT * FROM Address WHERE Id = @AddressId";
+                restaurant.Address = await _dataAccess.GetById<AddressDto>(addressSql, new { AddressId = restaurant.AddressId });
 
-                var menuItemsSql = "SELECT * FROM MenuItem WHERE RestaurantId = @RestaurantId;";
-                var menuItems = await _dataAccess.GetAll<MenuItemDto>(menuItemsSql, new { RestaurantId = id });
-                restaurant.MenuItems = menuItems;
+                var operatingHoursSql = "SELECT * FROM OperatingHours WHERE RestaurantId = @RestaurantId";
+                restaurant.OperatingHours = await _dataAccess.GetAll<OperatingHoursDto>(operatingHoursSql, new { RestaurantId = id }) ?? new List<OperatingHoursDto>();
 
-                var addressSql = "SELECT * FROM Address WHERE Id = @AddressId;";
-                var address = await _dataAccess.GetById<AddressDto>(addressSql, new { AddressId = restaurant.AddressId });
-                restaurant.Address = address;
-
-                var operatingHoursSql = "SELECT * FROM OperatingHours WHERE Id = @OperatingHoursId;";
-                var operatingHours = await _dataAccess.GetById<OperatingHoursDto>(operatingHoursSql, new { OperatingHoursId = restaurant.OperatingHoursId });
-                restaurant.OperatingHours = operatingHours;
+                var foodCategoriesSql = "SELECT * FROM FoodCategory WHERE RestaurantId = @RestaurantId";
+                restaurant.FoodCategories = await _dataAccess.GetAll<FoodCategoryDto>(foodCategoriesSql, new { RestaurantId = id }) ?? new List<FoodCategoryDto>();
 
                 return restaurant;
             }
@@ -224,23 +228,22 @@ namespace MTOGO.Services.RestaurantAPI.Services
         {
             try
             {
-                var sql = @"SELECT * FROM Restaurant";
-
-                var restaurants = await _dataAccess.GetAll<RestaurantDto>(sql);
+                var sql = "SELECT * FROM Restaurant";
+                var restaurants = await _dataAccess.GetAll<RestaurantDto>(sql) ?? new List<RestaurantDto>();
 
                 foreach (var restaurant in restaurants)
                 {
-                    var addressSql = "SELECT * FROM Address WHERE Id = @AddressId;";
-                    var address = await _dataAccess.GetById<AddressDto>(addressSql, new { AddressId = restaurant.AddressId });
-                    restaurant.Address = address;
+                    var addressSql = "SELECT * FROM Address WHERE Id = @AddressId";
+                    restaurant.Address = await _dataAccess.GetById<AddressDto>(addressSql, new { AddressId = restaurant.AddressId });
 
-                    var operatingHoursSql = "SELECT * FROM OperatingHours WHERE Id = @OperatingHoursId;";
-                    var operatingHours = await _dataAccess.GetById<OperatingHoursDto>(operatingHoursSql, new { OperatingHoursId = restaurant.OperatingHoursId });
-                    restaurant.OperatingHours = operatingHours;
+                    var operatingHoursSql = "SELECT * FROM OperatingHours WHERE RestaurantId = @RestaurantId";
+                    restaurant.OperatingHours = await _dataAccess.GetAll<OperatingHoursDto>(operatingHoursSql, new { RestaurantId = restaurant.Id }) ?? new List<OperatingHoursDto>();
 
-                    var menuItemsSql = "SELECT * FROM MenuItem WHERE RestaurantId = @RestaurantId;";
-                    var menuItems = await _dataAccess.GetAll<MenuItemDto>(menuItemsSql, new { RestaurantId = restaurant.Id });
-                    restaurant.MenuItems = menuItems ?? new List<MenuItemDto>();
+                    var menuItemsSql = "SELECT * FROM MenuItem WHERE RestaurantId = @RestaurantId";
+                    restaurant.MenuItems = await _dataAccess.GetAll<MenuItemDto>(menuItemsSql, new { RestaurantId = restaurant.Id }) ?? new List<MenuItemDto>();
+
+                    var foodCategoriesSql = "SELECT * FROM FoodCategory WHERE RestaurantId = @RestaurantId";
+                    restaurant.FoodCategories = await _dataAccess.GetAll<FoodCategoryDto>(foodCategoriesSql, new { RestaurantId = restaurant.Id }) ?? new List<FoodCategoryDto>();
                 }
 
                 return restaurants;

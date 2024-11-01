@@ -9,8 +9,8 @@
         public string? RestaurantDescription { get; set; }
         public string? ContactEmail { get; set; }
         public string? ContactPhone { get; set; }
-        public FoodCategory? FoodCategory { get; set; }
+        public List<FoodCategoryDto>? FoodCategories { get; set; }
         public AddressDto? Address { get; set; }
-        public OperatingHoursDto? OperatingHours { get; set; }
+        public List<OperatingHoursDto>? OperatingHours { get; set; }
     }
 }

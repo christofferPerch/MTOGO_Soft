@@ -1,6 +1,0 @@
-@MTOGO.Services.RestaurantAPI_HostAddress = http://localhost:5147
-
-GET {{MTOGO.Services.RestaurantAPI_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

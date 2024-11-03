@@ -35,7 +35,7 @@ namespace MTOGO.Services.OrderAPI.Controllers
                     return BadRequest(_response);
                 }
 
-                var orderId = await _orderService.CreateOrderAsync(order);
+                var orderId = await _orderService.CreateOrder(order);
                 _response.Result = orderId;
                 _response.Message = "Order created successfully.";
 
@@ -56,7 +56,7 @@ namespace MTOGO.Services.OrderAPI.Controllers
         {
             try
             {
-                var order = await _orderService.GetOrderByIdAsync(id);
+                var order = await _orderService.GetOrderById(id);
                 if (order == null)
                 {
                     _response.IsSuccess = false;
@@ -82,7 +82,7 @@ namespace MTOGO.Services.OrderAPI.Controllers
         {
             try
             {
-                var success = await _orderService.UpdateOrderStatusAsync(orderId, statusId);
+                var success = await _orderService.UpdateOrderStatus(orderId, statusId);
                 if (success == 0)
                 {
                     _response.IsSuccess = false;
@@ -98,31 +98,6 @@ namespace MTOGO.Services.OrderAPI.Controllers
                 _logger.LogError(ex, "Error updating order status.");
                 _response.IsSuccess = false;
                 _response.Message = "An error occurred while updating order status.";
-                return StatusCode(500, _response);
-            }
-        }
-
-        [HttpDelete("delete/{id}")]
-        public async Task<IActionResult> DeleteOrder(int id)
-        {
-            try
-            {
-                var result = await _orderService.DeleteOrderAsync(id);
-                if (result == 0)
-                {
-                    _response.IsSuccess = false;
-                    _response.Message = "Order not found.";
-                    return NotFound(_response);
-                }
-
-                _response.Message = "Order deleted successfully.";
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deleting order.");
-                _response.IsSuccess = false;
-                _response.Message = "An error occurred while deleting the order.";
                 return StatusCode(500, _response);
             }
         }

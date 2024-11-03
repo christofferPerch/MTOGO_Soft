@@ -54,15 +54,15 @@ namespace MTOGO.Services.ShoppingCartAPI.Services
             });
         }
 
-        public async Task<Cart?> GetCartAsync(string userId)
+        public async Task<Cart?> GetCart(string userId)
         {
             var cartData = await _redisCache.GetStringAsync(userId);
             return string.IsNullOrEmpty(cartData) ? null : JsonConvert.DeserializeObject<Cart>(cartData);
         }
 
-        public async Task<Cart> CreateCartAsync(Cart cart)
+        public async Task<Cart> CreateCart(Cart cart)
         {
-            var existingCart = await GetCartAsync(cart.UserId);
+            var existingCart = await GetCart(cart.UserId);
             if (existingCart != null)
             {
                 throw new InvalidOperationException($"Cart already exists for user {cart.UserId}");
@@ -75,16 +75,16 @@ namespace MTOGO.Services.ShoppingCartAPI.Services
             return cart;
         }
 
-        public async Task<Cart> UpdateCartAsync(Cart cart)
+        public async Task<Cart> UpdateCart(Cart cart)
         {
             await _redisCache.SetStringAsync(cart.UserId, JsonConvert.SerializeObject(cart));
             await _messageBus.PublishMessage(_cartUpdatedQueue, JsonConvert.SerializeObject(cart));
 
             _logger.LogInformation($"Updated cart for user {cart.UserId}");
-            return await GetCartAsync(cart.UserId);
+            return await GetCart(cart.UserId);
         }
 
-        public async Task<bool> RemoveCartAsync(string userId)
+        public async Task<bool> RemoveCart(string userId)
         {
             await _redisCache.RemoveAsync(userId);
             await _messageBus.PublishMessage(_cartRemovedQueue, $"Cart for user {userId} removed");
@@ -95,7 +95,7 @@ namespace MTOGO.Services.ShoppingCartAPI.Services
 
         public async Task ProcessCartRequest(CartRequestMessageDto cartRequest)
         {
-            var cart = await GetCartAsync(cartRequest.UserId);
+            var cart = await GetCart(cartRequest.UserId);
             if (cart == null)
             {
                 _logger.LogWarning($"No cart found for user {cartRequest.UserId}");

@@ -43,6 +43,7 @@ namespace MTOGO.Services.ShoppingCartAPI.Services
             }
 
             SubscribeToCartRequestQueue();
+            SubscribeToCartRemovedQueue();
         }
 
         private void SubscribeToCartRequestQueue()
@@ -53,6 +54,24 @@ namespace MTOGO.Services.ShoppingCartAPI.Services
                 await ProcessCartRequest(cartRequest);
             });
         }
+
+        private void SubscribeToCartRemovedQueue()
+        {
+            _messageBus.SubscribeMessage<CartRemovedMessageDto>(_cartRemovedQueue, async (cartRemovedMessage) =>
+            {
+                if (cartRemovedMessage == null || string.IsNullOrEmpty(cartRemovedMessage.UserId))
+                {
+                    _logger.LogWarning("Received an invalid cart removed message or missing UserId.");
+                    return;
+                }
+
+                _logger.LogInformation($"Received cart removed message for user {cartRemovedMessage.UserId}");
+                await RemoveCart(cartRemovedMessage.UserId);
+                _logger.LogInformation($"Cart for user {cartRemovedMessage.UserId} removed after order creation.");
+            });
+        }
+
+
 
         public async Task<Cart?> GetCart(string userId)
         {
@@ -108,6 +127,7 @@ namespace MTOGO.Services.ShoppingCartAPI.Services
                 CorrelationId = cartRequest.CorrelationId,
                 Items = cart.Items.Select(item => new OrderItemDto
                 {
+                    RestaurantId = item.RestaurantId,
                     MenuItemId = item.MenuItemId,
                     Quantity = item.Quantity,
                     Price = item.Price
@@ -117,7 +137,5 @@ namespace MTOGO.Services.ShoppingCartAPI.Services
             _logger.LogInformation($"Publishing cart response with CorrelationId: {cartResponse.CorrelationId} to CartResponseQueue");
             await _messageBus.PublishMessage("CartResponseQueue", JsonConvert.SerializeObject(cartResponse));
         }
-
-
     }
 }

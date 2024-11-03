@@ -24,7 +24,7 @@ namespace MTOGO.Services.OrderAPI.Controllers
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> CreateOrder([FromBody] OrderDto order)
+        public async Task<IActionResult> CreateOrder([FromBody] AddOrderDto order)
         {
             try
             {
@@ -39,7 +39,6 @@ namespace MTOGO.Services.OrderAPI.Controllers
                 _response.Result = orderId;
                 _response.Message = "Order created successfully.";
 
-                await _messageBus.PublishMessage("TopicAndQueueNames:OrderCreatedQueue", $"Order {orderId} created for user {order.UserId}");
                 return Ok(_response);
             }
             catch (Exception ex)

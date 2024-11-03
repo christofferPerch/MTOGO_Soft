@@ -56,12 +56,5 @@ namespace MTOGO.Services.ShoppingCartAPI.Controllers
             return NoContent();
         }
 
-        [HttpPost("request-cart-items")]
-        public async Task<IActionResult> RequestCartItems([FromBody] CartRequestMessageDto request)
-        {
-            request.CorrelationId = Guid.NewGuid();
-            await _messageBus.PublishMessage("TopicAndQueueNames:CartRequestQueue", JsonConvert.SerializeObject(request));
-            return Accepted(new { CorrelationId = request.CorrelationId });
-        }
     }
 }

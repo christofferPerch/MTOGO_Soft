@@ -4,6 +4,7 @@ using MTOGO.Services.DataAccess;
 using MTOGO.Services.OrderAPI.Models;
 using MTOGO.Services.OrderAPI.Models.Dto;
 using MTOGO.Services.OrderAPI.Services.IServices;
+using MTOGO.Services.ShoppingCartAPI.Models.Dto;
 using Newtonsoft.Json;
 using System.Data;
 
@@ -32,7 +33,7 @@ namespace MTOGO.Services.OrderAPI.Services
             }
         }
 
-        public async Task<int> CreateOrder(OrderDto order)
+        public async Task<int> CreateOrder(AddOrderDto order)
         {
             try
             {
@@ -46,12 +47,17 @@ namespace MTOGO.Services.OrderAPI.Services
                 await _messageBus.PublishMessage(_cartRequestQueue, JsonConvert.SerializeObject(cartRequest));
 
                 var cartResponse = await WaitForCartResponse(correlationId);
-
                 order.Items = cartResponse.Items;
                 order.TotalAmount = cartResponse.Items.Sum(item => item.Price * item.Quantity);
                 order.VATAmount = order.TotalAmount * 0.2m;
 
-                return await SaveOrder(order);
+                var orderId = await SaveOrder(order);
+
+                await _messageBus.PublishMessage("TopicAndQueueNames:OrderCreatedQueue", $"Order {orderId} created for user {order.UserId}");
+
+                await _messageBus.PublishMessage("CartRemovedQueue", JsonConvert.SerializeObject(new CartRemovedMessageDto { UserId = order.UserId }));
+
+                return orderId;
             }
             catch (Exception ex)
             {
@@ -59,6 +65,7 @@ namespace MTOGO.Services.OrderAPI.Services
                 throw;
             }
         }
+
 
         private async Task<CartResponseMessage> WaitForCartResponse(Guid correlationId)
         {
@@ -73,7 +80,8 @@ namespace MTOGO.Services.OrderAPI.Services
                 }
             });
 
-            var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(45)));
+            _logger.LogInformation("Waiting for cart response with CorrelationId: {CorrelationId}", correlationId);
+            var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(90))); 
             if (completedTask == tcs.Task)
             {
                 return tcs.Task.Result;
@@ -84,11 +92,13 @@ namespace MTOGO.Services.OrderAPI.Services
             }
         }
 
-        private async Task<int> SaveOrder(OrderDto order)
+
+        private async Task<int> SaveOrder(AddOrderDto order)
         {
             try
             {
                 var orderItemsTable = new DataTable();
+                orderItemsTable.Columns.Add("RestaurantId", typeof(int));
                 orderItemsTable.Columns.Add("MenuItemId", typeof(int));
                 orderItemsTable.Columns.Add("Price", typeof(decimal));
                 orderItemsTable.Columns.Add("Quantity", typeof(int));
@@ -96,6 +106,7 @@ namespace MTOGO.Services.OrderAPI.Services
                 foreach (var item in order.Items)
                 {
                     orderItemsTable.Rows.Add(
+                        item.RestaurantId,
                         item.MenuItemId,
                         item.Price,
                         item.Quantity
@@ -104,8 +115,6 @@ namespace MTOGO.Services.OrderAPI.Services
 
                 var parameters = new DynamicParameters();
                 parameters.Add("@UserId", order.UserId);
-                parameters.Add("@RestaurantId", order.RestaurantId);
-                parameters.Add("@DeliveryAgentId", order.DeliveryAgentId);
                 parameters.Add("@TotalAmount", order.TotalAmount);
                 parameters.Add("@VATAmount", order.VATAmount);
                 parameters.Add("@OrderPlacedTimestamp", DateTime.UtcNow);

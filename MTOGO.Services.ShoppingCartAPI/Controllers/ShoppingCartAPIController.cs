@@ -1,10 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MTOGO.MessageBus;
 using MTOGO.Services.ShoppingCartAPI.Models;
-using MTOGO.Services.ShoppingCartAPI.Models.Dto;
 using MTOGO.Services.ShoppingCartAPI.Services.IServices;
-using Newtonsoft.Json;
-using System;
 
 namespace MTOGO.Services.ShoppingCartAPI.Controllers
 {

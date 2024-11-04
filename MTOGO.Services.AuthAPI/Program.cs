@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using MTOGO.MessageBus;
 using MTOGO.Services.AuthAPI.Data;
 using MTOGO.Services.AuthAPI.Models;
 using MTOGO.Services.AuthAPI.Services;
 using MTOGO.Services.AuthAPI.Services.IServices;
-using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 

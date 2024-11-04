@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Configuration;
 using MTOGO.MessageBus;
 using MTOGO.Services.ShoppingCartAPI.Models;
 using MTOGO.Services.ShoppingCartAPI.Models.Dto;
@@ -12,24 +11,23 @@ namespace MTOGO.Services.ShoppingCartAPI.Services
     {
         private readonly IDistributedCache _redisCache;
         private readonly IMessageBus _messageBus;
-        private readonly ILogger<ShoppingCartService> _logger;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<ShoppingCartService> _logger;
 
-        private readonly string _cartCreatedQueue;
+        /*private readonly string _cartCreatedQueue;
         private readonly string _cartUpdatedQueue;
         private readonly string _cartRemovedQueue;
         private readonly string _cartRequestQueue;
-        private readonly string _cartResponseQueue;
+        private readonly string _cartResponseQueue;*/
 
-        public ShoppingCartService(IDistributedCache redisCache, IMessageBus messageBus,
-            ILogger<ShoppingCartService> logger, IConfiguration configuration)
+        public ShoppingCartService(IDistributedCache redisCache, IMessageBus messageBus, IConfiguration configuration, ILogger<ShoppingCartService> logger)
         {
             _redisCache = redisCache;
             _messageBus = messageBus;
-            _logger = logger;
             _configuration = configuration;
+            _logger = logger;
 
-            _cartCreatedQueue = _configuration.GetValue<string>("TopicAndQueueNames:CartCreatedQueue");
+            /*_cartCreatedQueue = _configuration.GetValue<string>("TopicAndQueueNames:CartCreatedQueue");
             _cartUpdatedQueue = _configuration.GetValue<string>("TopicAndQueueNames:CartUpdatedQueue");
             _cartRemovedQueue = _configuration.GetValue<string>("TopicAndQueueNames:CartRemovedQueue");
             _cartRequestQueue = _configuration.GetValue<string>("TopicAndQueueNames:CartRequestQueue");
@@ -40,102 +38,165 @@ namespace MTOGO.Services.ShoppingCartAPI.Services
                 string.IsNullOrEmpty(_cartResponseQueue))
             {
                 throw new Exception("One or more queue names are not configured properly in appsettings.json.");
-            }
+            }*/
 
-            SubscribeToCartRequestQueue();
-            SubscribeToCartRemovedQueue();
+            try
+            {
+                SubscribeToCartRequestQueue();
+                SubscribeToCartRemovedQueue();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error subscribing to RabbitMQ queues.");
+                throw;
+            }
         }
 
         private void SubscribeToCartRequestQueue()
         {
-            _messageBus.SubscribeMessage<CartRequestMessageDto>(_cartRequestQueue, async (cartRequest) =>
+            try
             {
-                _logger.LogInformation($"Received cart request message for user {cartRequest.UserId} with CorrelationId: {cartRequest.CorrelationId}");
-                await ProcessCartRequest(cartRequest);
-            });
+                //removed _cartRequestQueue
+                string topicName = _configuration.GetValue<string>("TopicAndQueueNames:CartRequestQueue");
+                _messageBus.SubscribeMessage<CartRequestMessageDto>(topicName, async (cartRequest) =>
+                {
+                    await ProcessCartRequest(cartRequest);
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error subscribing to CartRequestQueue.");
+                throw;
+            }
         }
 
         private void SubscribeToCartRemovedQueue()
         {
-            _messageBus.SubscribeMessage<CartRemovedMessageDto>(_cartRemovedQueue, async (cartRemovedMessage) =>
+            try
             {
-                if (cartRemovedMessage == null || string.IsNullOrEmpty(cartRemovedMessage.UserId))
+                //removed _cartRemovedQueue
+                string topicName = _configuration.GetValue<string>("TopicAndQueueNames:CartRemovedQueue");
+                _messageBus.SubscribeMessage<CartRemovedMessageDto>(topicName, async (cartRemovedMessage) =>
                 {
-                    _logger.LogWarning("Received an invalid cart removed message or missing UserId.");
-                    return;
-                }
+                    if (cartRemovedMessage == null || string.IsNullOrEmpty(cartRemovedMessage.UserId))
+                    {
+                        return;
+                    }
 
-                _logger.LogInformation($"Received cart removed message for user {cartRemovedMessage.UserId}");
-                await RemoveCart(cartRemovedMessage.UserId);
-                _logger.LogInformation($"Cart for user {cartRemovedMessage.UserId} removed after order creation.");
-            });
+                    await RemoveCart(cartRemovedMessage.UserId);
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error subscribing to CartRemovedQueue.");
+                throw;
+            }
         }
-
-
 
         public async Task<Cart?> GetCart(string userId)
         {
-            var cartData = await _redisCache.GetStringAsync(userId);
-            return string.IsNullOrEmpty(cartData) ? null : JsonConvert.DeserializeObject<Cart>(cartData);
+            try
+            {
+                var cartData = await _redisCache.GetStringAsync(userId);
+                return string.IsNullOrEmpty(cartData) ? null : JsonConvert.DeserializeObject<Cart>(cartData);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error retrieving cart for user {userId}.");
+                throw;
+            }
         }
 
         public async Task<Cart> CreateCart(Cart cart)
         {
-            var existingCart = await GetCart(cart.UserId);
-            if (existingCart != null)
+            try
             {
-                throw new InvalidOperationException($"Cart already exists for user {cart.UserId}");
+                //removed _cartCreatedQueue
+                string topicName = _configuration.GetValue<string>("TopicAndQueueNames:CartCreatedQueue");
+                var existingCart = await GetCart(cart.UserId);
+                if (existingCart != null)
+                {
+                    throw new InvalidOperationException($"Cart already exists for user {cart.UserId}");
+                }
+
+                await _redisCache.SetStringAsync(cart.UserId, JsonConvert.SerializeObject(cart));
+                await _messageBus.PublishMessage(topicName, JsonConvert.SerializeObject(cart));
+
+                return cart;
             }
-
-            await _redisCache.SetStringAsync(cart.UserId, JsonConvert.SerializeObject(cart));
-            await _messageBus.PublishMessage(_cartCreatedQueue, JsonConvert.SerializeObject(cart));
-
-            _logger.LogInformation($"Created new cart for user {cart.UserId}");
-            return cart;
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error creating cart for user {cart.UserId}.");
+                throw;
+            }
         }
 
         public async Task<Cart> UpdateCart(Cart cart)
         {
-            await _redisCache.SetStringAsync(cart.UserId, JsonConvert.SerializeObject(cart));
-            await _messageBus.PublishMessage(_cartUpdatedQueue, JsonConvert.SerializeObject(cart));
+            try
+            {
+                //removed _cartUpdatedQueue
+                string topicName = _configuration.GetValue<string>("TopicAndQueueNames:CartUpdatedQueue");
+                await _redisCache.SetStringAsync(cart.UserId, JsonConvert.SerializeObject(cart));
+                await _messageBus.PublishMessage(topicName, JsonConvert.SerializeObject(cart));
 
-            _logger.LogInformation($"Updated cart for user {cart.UserId}");
-            return await GetCart(cart.UserId);
+                return await GetCart(cart.UserId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error updating cart for user {cart.UserId}.");
+                throw;
+            }
         }
 
         public async Task<bool> RemoveCart(string userId)
         {
-            await _redisCache.RemoveAsync(userId);
-            await _messageBus.PublishMessage(_cartRemovedQueue, $"Cart for user {userId} removed");
+            try
+            {
+                //removed _cartRemovedQueue
+                string topicName = _configuration.GetValue<string>("TopicAndQueueNames:CartUpdatedQueue");
+                await _redisCache.RemoveAsync(userId);
+                await _messageBus.PublishMessage(topicName, $"Cart for user {userId} removed");
 
-            _logger.LogInformation($"Removed cart for user {userId}");
-            return true;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error removing cart for user {userId}.");
+                throw;
+            }
         }
 
         public async Task ProcessCartRequest(CartRequestMessageDto cartRequest)
         {
-            var cart = await GetCart(cartRequest.UserId);
-            if (cart == null)
+            try
             {
-                _logger.LogWarning($"No cart found for user {cartRequest.UserId}");
-                return;
-            }
-
-            var cartResponse = new CartResponseMessageDto
-            {
-                UserId = cartRequest.UserId,
-                CorrelationId = cartRequest.CorrelationId,
-                Items = cart.Items.Select(item => new OrderItemDto
+                var cart = await GetCart(cartRequest.UserId);
+                if (cart == null)
                 {
-                    RestaurantId = item.RestaurantId,
-                    MenuItemId = item.MenuItemId,
-                    Quantity = item.Quantity,
-                    Price = item.Price
-                }).ToList()
-            };
+                    return;
+                }
 
-            _logger.LogInformation($"Publishing cart response with CorrelationId: {cartResponse.CorrelationId} to CartResponseQueue");
-            await _messageBus.PublishMessage("CartResponseQueue", JsonConvert.SerializeObject(cartResponse));
+                var cartResponse = new CartResponseMessageDto
+                {
+                    UserId = cartRequest.UserId,
+                    CorrelationId = cartRequest.CorrelationId,
+                    Items = cart.Items.Select(item => new OrderItemDto
+                    {
+                        RestaurantId = item.RestaurantId,
+                        MenuItemId = item.MenuItemId,
+                        Quantity = item.Quantity,
+                        Price = item.Price
+                    }).ToList()
+                };
+
+                await _messageBus.PublishMessage("CartResponseQueue", JsonConvert.SerializeObject(cartResponse));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error processing cart request for user {cartRequest.UserId}.");
+                throw;
+            }
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MTOGO.MessageBus;
-using MTOGO.Services.OrderAPI.Models;
 using MTOGO.Services.OrderAPI.Models.Dto;
 using MTOGO.Services.OrderAPI.Services.IServices;
 

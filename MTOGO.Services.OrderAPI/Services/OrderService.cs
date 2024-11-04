@@ -81,7 +81,7 @@ namespace MTOGO.Services.OrderAPI.Services
             });
 
             _logger.LogInformation("Waiting for cart response with CorrelationId: {CorrelationId}", correlationId);
-            var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(90))); 
+            var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(90)));
             if (completedTask == tcs.Task)
             {
                 return tcs.Task.Result;

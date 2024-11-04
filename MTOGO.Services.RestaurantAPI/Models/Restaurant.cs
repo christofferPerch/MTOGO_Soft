@@ -1,6 +1,4 @@
-﻿using MTOGO.Services.RestaurantAPI.Models.Dto;
-
-namespace MTOGO.Services.RestaurantAPI.Models
+﻿namespace MTOGO.Services.RestaurantAPI.Models
 {
     public class Restaurant
     {

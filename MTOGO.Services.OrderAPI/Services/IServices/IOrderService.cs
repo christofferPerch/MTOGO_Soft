@@ -1,5 +1,4 @@
-﻿using MTOGO.Services.OrderAPI.Models;
-using MTOGO.Services.OrderAPI.Models.Dto;
+﻿using MTOGO.Services.OrderAPI.Models.Dto;
 
 namespace MTOGO.Services.OrderAPI.Services.IServices
 {

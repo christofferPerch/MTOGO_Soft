@@ -1,4 +1,3 @@
-using MMLib.SwaggerForOcelot.DependencyInjection;
 using MTOGO.GatewaySolution.Extensions;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;

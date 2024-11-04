@@ -1,7 +1,7 @@
+using Microsoft.OpenApi.Models;
 using MTOGO.MessageBus;
 using MTOGO.Services.ShoppingCartAPI.Services;
 using MTOGO.Services.ShoppingCartAPI.Services.IServices;
-using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 

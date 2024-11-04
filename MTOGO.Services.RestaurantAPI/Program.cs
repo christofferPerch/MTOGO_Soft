@@ -1,9 +1,9 @@
+using Microsoft.OpenApi.Models;
+using MTOGO.MessageBus;
 using MTOGO.Services.DataAccess;
+using MTOGO.Services.RestaurantAPI.Extensions;
 using MTOGO.Services.RestaurantAPI.Services;
 using MTOGO.Services.RestaurantAPI.Services.IServices;
-using MTOGO.MessageBus;
-using Microsoft.OpenApi.Models;
-using MTOGO.Services.RestaurantAPI.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using MTOGO.Services.AuthAPI.Models.Dto;
-using MTOGO.Services.AuthAPI.Models;
-using MTOGO.Services.AuthAPI.Services.IServices;
-using System;
-using MTOGO.Services.AuthAPI.Data;
 using Microsoft.EntityFrameworkCore;
+using MTOGO.Services.AuthAPI.Data;
+using MTOGO.Services.AuthAPI.Models;
+using MTOGO.Services.AuthAPI.Models.Dto;
+using MTOGO.Services.AuthAPI.Services.IServices;
 
 namespace MTOGO.Services.AuthAPI.Services
 {
@@ -124,7 +123,7 @@ namespace MTOGO.Services.AuthAPI.Services
                         PhoneNumber = userToReturn.PhoneNumber
                     };
 
-                    return "";  
+                    return "";
                 }
                 else
                 {

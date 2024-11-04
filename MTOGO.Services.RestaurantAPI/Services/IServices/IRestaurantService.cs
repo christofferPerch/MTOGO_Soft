@@ -1,5 +1,4 @@
-﻿using MTOGO.Services.RestaurantAPI.Models;
-using MTOGO.Services.RestaurantAPI.Models.Dto;
+﻿using MTOGO.Services.RestaurantAPI.Models.Dto;
 
 namespace MTOGO.Services.RestaurantAPI.Services.IServices
 {

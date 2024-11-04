@@ -2,7 +2,7 @@
 {
     public class OrderDto
     {
-        public string UserId { get; set; }             
+        public string UserId { get; set; }
         public int? DeliveryAgentId { get; set; }
         public decimal TotalAmount { get; set; }
         public decimal VATAmount { get; set; }

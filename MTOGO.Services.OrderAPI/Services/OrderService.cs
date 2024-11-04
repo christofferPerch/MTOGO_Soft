@@ -15,22 +15,16 @@ namespace MTOGO.Services.OrderAPI.Services
         private readonly IDataAccess _dataAccess;
         private readonly ILogger<OrderService> _logger;
         private readonly IMessageBus _messageBus;
-        private readonly string _cartRequestQueue;
-        private readonly string _cartResponseQueue;
+        private readonly IConfiguration _configuration;
+
 
         public OrderService(IDataAccess dataAccess, ILogger<OrderService> logger, IMessageBus messageBus, IConfiguration configuration)
         {
             _dataAccess = dataAccess;
             _logger = logger;
             _messageBus = messageBus;
+            _configuration = configuration;
 
-            _cartRequestQueue = configuration.GetValue<string>("TopicAndQueueNames:CartRequestQueue");
-            _cartResponseQueue = configuration.GetValue<string>("TopicAndQueueNames:CartResponseQueue");
-
-            if (string.IsNullOrEmpty(_cartRequestQueue) || string.IsNullOrEmpty(_cartResponseQueue))
-            {
-                throw new Exception("Queue names are not configured properly in appsettings.json.");
-            }
         }
 
         public async Task<int> CreateOrder(AddOrderDto order)
@@ -43,8 +37,8 @@ namespace MTOGO.Services.OrderAPI.Services
                     UserId = order.UserId,
                     CorrelationId = correlationId
                 };
-
-                await _messageBus.PublishMessage(_cartRequestQueue, JsonConvert.SerializeObject(cartRequest));
+                string cartTopicName = _configuration.GetValue<string>("TopicAndQueueNames:CartRequestQueue");
+                await _messageBus.PublishMessage(cartTopicName, JsonConvert.SerializeObject(cartRequest));
 
                 var cartResponse = await WaitForCartResponse(correlationId);
                 order.Items = cartResponse.Items;
@@ -52,8 +46,9 @@ namespace MTOGO.Services.OrderAPI.Services
                 order.VATAmount = order.TotalAmount * 0.2m;
 
                 var orderId = await SaveOrder(order);
+                string topicName = _configuration.GetValue<string>("TopicAndQueueNames:OrderCreatedQueue");
 
-                await _messageBus.PublishMessage("TopicAndQueueNames:OrderCreatedQueue", $"Order {orderId} created for user {order.UserId}");
+                await _messageBus.PublishMessage(topicName, $"Order {orderId} created for user {order.UserId}");
 
                 await _messageBus.PublishMessage("CartRemovedQueue", JsonConvert.SerializeObject(new CartRemovedMessageDto { UserId = order.UserId }));
 

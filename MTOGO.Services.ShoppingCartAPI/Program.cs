@@ -1,5 +1,6 @@
 using Microsoft.OpenApi.Models;
 using MTOGO.MessageBus;
+using MTOGO.Services.ShoppingCartAPI.Extensions;
 using MTOGO.Services.ShoppingCartAPI.Services;
 using MTOGO.Services.ShoppingCartAPI.Services.IServices;
 
@@ -22,6 +23,8 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Shopping Cart API", Version = "v1" });
 });
+
+builder.AddAppAuthetication();
 
 var app = builder.Build();
 

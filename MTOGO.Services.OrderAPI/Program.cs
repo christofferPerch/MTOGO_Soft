@@ -1,5 +1,6 @@
 using MTOGO.MessageBus;
 using MTOGO.Services.DataAccess;
+using MTOGO.Services.OrderAPI.Extensions;
 using MTOGO.Services.OrderAPI.Services;
 using MTOGO.Services.OrderAPI.Services.IServices;
 
@@ -36,6 +37,8 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.AddAppAuthetication();
 
 var app = builder.Build();
 

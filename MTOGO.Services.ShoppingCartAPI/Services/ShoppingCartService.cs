@@ -14,31 +14,12 @@ namespace MTOGO.Services.ShoppingCartAPI.Services
         private readonly IConfiguration _configuration;
         private readonly ILogger<ShoppingCartService> _logger;
 
-        /*private readonly string _cartCreatedQueue;
-        private readonly string _cartUpdatedQueue;
-        private readonly string _cartRemovedQueue;
-        private readonly string _cartRequestQueue;
-        private readonly string _cartResponseQueue;*/
-
         public ShoppingCartService(IDistributedCache redisCache, IMessageBus messageBus, IConfiguration configuration, ILogger<ShoppingCartService> logger)
         {
             _redisCache = redisCache;
             _messageBus = messageBus;
             _configuration = configuration;
             _logger = logger;
-
-            /*_cartCreatedQueue = _configuration.GetValue<string>("TopicAndQueueNames:CartCreatedQueue");
-            _cartUpdatedQueue = _configuration.GetValue<string>("TopicAndQueueNames:CartUpdatedQueue");
-            _cartRemovedQueue = _configuration.GetValue<string>("TopicAndQueueNames:CartRemovedQueue");
-            _cartRequestQueue = _configuration.GetValue<string>("TopicAndQueueNames:CartRequestQueue");
-            _cartResponseQueue = _configuration.GetValue<string>("TopicAndQueueNames:CartResponseQueue");
-
-            if (string.IsNullOrEmpty(_cartCreatedQueue) || string.IsNullOrEmpty(_cartUpdatedQueue) ||
-                string.IsNullOrEmpty(_cartRemovedQueue) || string.IsNullOrEmpty(_cartRequestQueue) ||
-                string.IsNullOrEmpty(_cartResponseQueue))
-            {
-                throw new Exception("One or more queue names are not configured properly in appsettings.json.");
-            }*/
 
             try
             {
@@ -56,7 +37,6 @@ namespace MTOGO.Services.ShoppingCartAPI.Services
         {
             try
             {
-                //removed _cartRequestQueue
                 string topicName = _configuration.GetValue<string>("TopicAndQueueNames:CartRequestQueue");
                 _messageBus.SubscribeMessage<CartRequestMessageDto>(topicName, async (cartRequest) =>
                 {
@@ -74,7 +54,6 @@ namespace MTOGO.Services.ShoppingCartAPI.Services
         {
             try
             {
-                //removed _cartRemovedQueue
                 string topicName = _configuration.GetValue<string>("TopicAndQueueNames:CartRemovedQueue");
                 _messageBus.SubscribeMessage<CartRemovedMessageDto>(topicName, async (cartRemovedMessage) =>
                 {
@@ -111,7 +90,6 @@ namespace MTOGO.Services.ShoppingCartAPI.Services
         {
             try
             {
-                //removed _cartCreatedQueue
                 string topicName = _configuration.GetValue<string>("TopicAndQueueNames:CartCreatedQueue");
                 var existingCart = await GetCart(cart.UserId);
                 if (existingCart != null)
@@ -135,7 +113,6 @@ namespace MTOGO.Services.ShoppingCartAPI.Services
         {
             try
             {
-                //removed _cartUpdatedQueue
                 string topicName = _configuration.GetValue<string>("TopicAndQueueNames:CartUpdatedQueue");
                 await _redisCache.SetStringAsync(cart.UserId, JsonConvert.SerializeObject(cart));
                 await _messageBus.PublishMessage(topicName, JsonConvert.SerializeObject(cart));
@@ -153,7 +130,6 @@ namespace MTOGO.Services.ShoppingCartAPI.Services
         {
             try
             {
-                //removed _cartRemovedQueue
                 string topicName = _configuration.GetValue<string>("TopicAndQueueNames:CartUpdatedQueue");
                 await _redisCache.RemoveAsync(userId);
                 await _messageBus.PublishMessage(topicName, $"Cart for user {userId} removed");

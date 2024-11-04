@@ -14,7 +14,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MTOGO.MessageBus\MTOGO.MessageBus.csproj" />
     <ProjectReference Include="..\MTOGO.Services.DataAccess\MTOGO.Services.DataAccess.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Extensions\" />
   </ItemGroup>
 
 </Project>

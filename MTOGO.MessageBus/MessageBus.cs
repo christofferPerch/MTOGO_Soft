@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System.Diagnostics;
 using System.Text;
 
 namespace MTOGO.MessageBus
@@ -88,6 +89,7 @@ namespace MTOGO.MessageBus
                 }
                 catch (Exception ex)
                 {
+                    Debug.WriteLine(ex);
                     channel.BasicNack(deliveryTag: ea.DeliveryTag, multiple: false, requeue: true);
 
                 }

@@ -1,31 +1,20 @@
-using MTOGO.Services.DataAccess;
+using MTOGO.MessageBus;
 using MTOGO.Services.FeedbackAPI.Services;
 using MTOGO.Services.FeedbackAPI.Services.IServices;
-using MTOGO.MessageBus;
+using MTOGO.Services.DataAccess;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
 // Register services
-builder.Services.AddScoped<IDataAccess, DataAccess>(sp => new DataAccess(connectionString));
+builder.Services.AddScoped<IDataAccess, DataAccess>(sp =>
+    new DataAccess(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
-builder.Services.AddScoped<IMessageBus, MessageBus>();
+builder.Services.AddSingleton<IMessageBus, MessageBus>();
 
-// Add caching and session
-builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession(options => {
-    options.IdleTimeout = TimeSpan.FromMinutes(15);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-});
-
-// Configure CORS
-builder.Services.AddCors(options => {
-    options.AddPolicy("AllowAllOrigins", builder => {
-        builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
-    });
+// Configure Redis caching
+builder.Services.AddStackExchangeRedisCache(options => {
+    options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
 });
 
 // Add controllers and Swagger
@@ -46,11 +35,6 @@ if (app.Environment.IsDevelopment()) {
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseRouting();
-app.UseCors("AllowAllOrigins");
-app.UseSession();
-app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();

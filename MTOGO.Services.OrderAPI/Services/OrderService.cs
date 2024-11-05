@@ -149,15 +149,29 @@ namespace MTOGO.Services.OrderAPI.Services
             }
         }
 
-        public async Task<int> UpdateOrderStatus(int orderId, int statusId)
-        {
-            try
-            {
+        public async Task<int> UpdateOrderStatus(int orderId, int statusId) {
+            try {
                 var sql = "UPDATE [Order] SET OrderStatusId = @StatusId WHERE Id = @OrderId;";
-                return await _dataAccess.Update(sql, new { OrderId = orderId, StatusId = statusId });
-            }
-            catch (Exception ex)
-            {
+                var result = await _dataAccess.Update(sql, new { OrderId = orderId, StatusId = statusId });
+
+                if (result > 0) {
+                    // Order status updated successfully, now publish the update to RabbitMQ
+                    var statusUpdate = new OrderStatusUpdateDto {
+                        OrderId = orderId,
+                        StatusId = statusId
+                    };
+
+                    // Serialize the DTO to JSON
+                    var message = JsonConvert.SerializeObject(statusUpdate);
+
+                    // Publish the message to the "OrderStatusQueue"
+                    await _messageBus.PublishMessage("OrderStatusQueue", message);
+
+                    _logger.LogInformation($"Order status update published for OrderId {orderId} with StatusId {statusId}");
+                }
+
+                return result;
+            } catch (Exception ex) {
                 _logger.LogError(ex, $"Error updating order status for ID {orderId}");
                 throw;
             }

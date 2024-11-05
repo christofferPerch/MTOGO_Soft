@@ -2,67 +2,34 @@ using MTOGO.MessageBus;
 using MTOGO.Services.DataAccess;
 using MTOGO.Services.OrderAPI.Services;
 using MTOGO.Services.OrderAPI.Services.IServices;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
+// Register services
 builder.Services.AddScoped<IDataAccess, DataAccess>(sp =>
-    new DataAccess(connectionString));
+    new DataAccess(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<IOrderService, OrderService>();  // Register IOrderService
+builder.Services.AddSingleton<IMessageBus, MessageBus>();   // Register IMessageBus as Singleton
 
-builder.Services.AddScoped<IOrderService, OrderService>();
-builder.Services.AddScoped<IMessageBus, MessageBus>();
-
-builder.Services.AddDistributedMemoryCache();
-
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromMinutes(15);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-});
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAllOrigins",
-        builder =>
-        {
-            builder.AllowAnyOrigin()
-                   .AllowAnyMethod()
-                   .AllowAnyHeader();
-        });
-});
-
+// Add controllers and Swagger
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c => {
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Order API", Version = "v1" });
+});
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
+// Use middleware
+if (app.Environment.IsDevelopment()) {
     app.UseSwagger();
-    app.UseSwaggerUI();
-}
-else
-{
-    app.UseExceptionHandler("/Error");
-    app.UseHsts();
+    app.UseSwaggerUI(c => {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Order API v1");
+    });
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseRouting();
-
-app.UseCors("AllowAllOrigins");
-
-app.UseSession();
-
-
-app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
-
-
 app.Run();

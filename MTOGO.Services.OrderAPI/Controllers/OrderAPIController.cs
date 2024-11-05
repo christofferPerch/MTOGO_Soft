@@ -101,5 +101,11 @@ namespace MTOGO.Services.OrderAPI.Controllers
                 return StatusCode(500, _response);
             }
         }
+
+        [HttpGet("test")]
+        public IActionResult Test() {
+            return Ok("Order API Controller is reachable.");
+        }
+
     }
 }

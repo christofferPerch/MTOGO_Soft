@@ -1,70 +1,115 @@
 ﻿using MTOGO.MessageBus;
 using MTOGO.Services.PaymentAPI.Models.Dto;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using MTOGO.Services.PaymentAPI.Services.IServices;
 
-namespace MTOGO.Services.PaymentAPI.Services
+public class PaymentService
 {
-    public class PaymentService : IPaymentService
+    private readonly IMessageBus _messageBus;
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<PaymentService> _logger;
+
+    public PaymentService(IMessageBus messageBus, IConfiguration configuration, ILogger<PaymentService> logger)
     {
-        private readonly IMessageBus _messageBus;
-        private readonly ILogger<PaymentService> _logger;
-        private readonly string _paymentResponseQueue;
+        _messageBus = messageBus;
+        _configuration = configuration;
+        _logger = logger;
+    }
 
-        public PaymentService(IMessageBus messageBus, IConfiguration configuration, ILogger<PaymentService> logger)
+    public async Task<PaymentResponseDto> ProcessPayment(PaymentRequestDto paymentRequest)
+    {
+        var cartDetails = await GetCartDetails(paymentRequest.UserId, paymentRequest.CorrelationId);
+        if (cartDetails == null)
         {
-            _messageBus = messageBus;
-            _logger = logger;
-            _paymentResponseQueue = configuration["RabbitMQ:TopicAndQueueNames:PaymentResponseQueue"];
-        }
-
-        public async Task ProcessPayment(PaymentRequestDto paymentRequest)
-        {
-            if (!ValidatePaymentDetails(paymentRequest))
+            return new PaymentResponseDto
             {
-                PublishPaymentResponse(paymentRequest, false, "Invalid payment details.");
-                return;
-            }
-
-            // Simulate payment processing delay
-            await Task.Delay(2000); // 2 seconds delay for realism
-
-            bool isSuccess = new Random().Next(0, 2) == 0; // Random success/failure for testing
-            string message = isSuccess ? "Payment processed successfully." : "Payment processing failed.";
-
-            PublishPaymentResponse(paymentRequest, isSuccess, message);
-        }
-
-        private bool ValidatePaymentDetails(PaymentRequestDto paymentRequest)
-        {
-            if (!Regex.IsMatch(paymentRequest.CardNumber, @"^\d{16}$")) return false;
-            if (!Regex.IsMatch(paymentRequest.ExpiryDate, @"^(0[1-9]|1[0-2])\/\d{2}$")) return false;
-            if (!Regex.IsMatch(paymentRequest.CVV, @"^\d{3}$")) return false;
-
-            var expiryParts = paymentRequest.ExpiryDate.Split('/');
-            int expiryMonth = int.Parse(expiryParts[0]);
-            int expiryYear = int.Parse(expiryParts[1]) + 2000;
-
-            var expiryDate = new DateTime(expiryYear, expiryMonth, DateTime.DaysInMonth(expiryYear, expiryMonth));
-            return expiryDate >= DateTime.Now;
-        }
-
-        private void PublishPaymentResponse(PaymentRequestDto request, bool isSuccess, string message)
-        {
-            var response = new PaymentResponseDto
-            {
-                UserId = request.UserId,
-                CorrelationId = request.CorrelationId,
-                IsSuccessful = isSuccess,
-                Message = message
+                UserId = paymentRequest.UserId,
+                CorrelationId = paymentRequest.CorrelationId,
+                IsSuccessful = false,
+                Message = "Failed to retrieve shopping cart details."
             };
-
-            _messageBus.PublishMessage(_paymentResponseQueue, JsonConvert.SerializeObject(response));
         }
+
+        paymentRequest.Items = cartDetails.Items;
+        paymentRequest.TotalAmount = cartDetails.Items.Sum(item => item.Price * item.Quantity);
+
+        bool isPaymentValid = ValidatePaymentDetails(paymentRequest);
+
+        var paymentResponse = new PaymentResponseDto
+        {
+            UserId = paymentRequest.UserId,
+            CorrelationId = paymentRequest.CorrelationId,
+            IsSuccessful = isPaymentValid,
+            Message = isPaymentValid ? "Payment processed successfully." : "Payment failed."
+        };
+
+        if (isPaymentValid)
+        {
+            //await PublishOrderCreation(paymentRequest);
+            //await PublishCartRemoval(paymentRequest.UserId);
+            await PublishPaymentSuccess(paymentRequest);
+
+        }
+
+        return paymentResponse;
+    }
+
+    private async Task<CartResponseMessageDto?> GetCartDetails(string userId, Guid correlationId)
+    {
+        var cartRequest = new CartRequestMessage
+        {
+            UserId = userId,
+            CorrelationId = correlationId
+        };
+
+        string cartRequestQueue = "CartRequestQueue"; 
+        await _messageBus.PublishMessage(cartRequestQueue, JsonConvert.SerializeObject(cartRequest));
+
+        var tcs = new TaskCompletionSource<CartResponseMessageDto>();
+
+        _messageBus.SubscribeMessage<CartResponseMessageDto>("CartResponseQueue", message =>
+        {
+            if (message.CorrelationId == correlationId)
+            {
+                tcs.SetResult(message);
+            }
+        });
+
+        var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(30)));
+        if (completedTask == tcs.Task)
+        {
+            return tcs.Task.Result;
+        }
+        else
+        {
+            _logger.LogWarning("Timeout waiting for cart response.");
+            return null;
+        }
+    }
+
+    private bool ValidatePaymentDetails(PaymentRequestDto paymentRequest)
+    {
+        return !string.IsNullOrEmpty(paymentRequest.CardNumber) &&
+               !string.IsNullOrEmpty(paymentRequest.ExpiryDate) &&
+               !string.IsNullOrEmpty(paymentRequest.CVV);
+    }
+
+    private Task PublishPaymentSuccess(PaymentRequestDto paymentRequest)
+    {
+        string paymentSuccessQueue = _configuration.GetValue<string>("TopicAndQueueNames:PaymentSuccessQueue");
+        return _messageBus.PublishMessage(paymentSuccessQueue, JsonConvert.SerializeObject(paymentRequest));
+    }
+
+
+    private Task PublishOrderCreation(PaymentRequestDto paymentRequest)
+    {
+        string orderQueue = _configuration.GetValue<string>("TopicAndQueueNames:OrderCreatedQueue");
+        return _messageBus.PublishMessage(orderQueue, JsonConvert.SerializeObject(paymentRequest));
+    }
+
+    private Task PublishCartRemoval(string userId)
+    {
+        string cartRemovalQueue = _configuration.GetValue<string>("TopicAndQueueNames:CartRemovedQueue");
+        var cartRemovedMessage = new { UserId = userId };
+        return _messageBus.PublishMessage(cartRemovalQueue, JsonConvert.SerializeObject(cartRemovedMessage));
     }
 }

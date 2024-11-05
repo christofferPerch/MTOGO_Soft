@@ -1,49 +1,30 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MTOGO.Services.PaymentAPI.Models.Dto;
 using MTOGO.Services.PaymentAPI.Services;
-using Microsoft.Extensions.Logging;
-using MTOGO.Services.PaymentAPI.Services.IServices;
 
 namespace MTOGO.Services.PaymentAPI.Controllers
 {
     [ApiController]
     [Route("api/payment")]
-    public class PaymentAPIController : ControllerBase
+    public class PaymentController : ControllerBase
     {
-        private readonly IPaymentService _paymentService;
-        private readonly ILogger<PaymentAPIController> _logger;
-        protected ResponseDto _response;
+        private readonly PaymentService _paymentService;
 
-        public PaymentAPIController(IPaymentService paymentService, ILogger<PaymentAPIController> logger)
+        public PaymentController(PaymentService paymentService)
         {
             _paymentService = paymentService;
-            _logger = logger;
-            _response = new ResponseDto();
         }
 
         [HttpPost("process")]
         public async Task<IActionResult> ProcessPayment([FromBody] PaymentRequestDto paymentRequest)
         {
-            try
+            if (paymentRequest == null)
             {
-                if (paymentRequest == null)
-                {
-                    _response.IsSuccess = false;
-                    _response.Message = "Payment request is invalid.";
-                    return BadRequest(_response);
-                }
+                return BadRequest(new ResponseDto { IsSuccess = false, Message = "Invalid payment data." });
+            }
 
-                await _paymentService.ProcessPayment(paymentRequest);
-                _response.Message = "Payment processing initiated.";
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error initiating payment for user {UserId}", paymentRequest.UserId);
-                _response.IsSuccess = false;
-                _response.Message = "An error occurred while processing the payment.";
-                return StatusCode(500, _response);
-            }
+            var paymentResponse = await _paymentService.ProcessPayment(paymentRequest);
+            return Ok(new ResponseDto { Result = paymentResponse, IsSuccess = paymentResponse.IsSuccessful, Message = paymentResponse.Message });
         }
     }
 }
